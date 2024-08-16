@@ -25,20 +25,12 @@ SRCS = ./src/glad.c \
 CXXFLAGS = -std=c++17 $(INCLUDE_DIRS)
 LDFLAGS = $(LIB_DIRS) $(LIBS)
 
+
 # Compile and link in one step
-all:
+compile:
 	$(CXX) $(CXXFLAGS) $(SRCS) -o main.exe $(LDFLAGS)
 
-# Copy DLL to output directory (adjust if needed)
-copy_dll:
-	cp ./glfw3.dll main.exe
-
-# Build and copy DLL
-build: all copy_dll
 
 # Clean up build files
 clean:
 	rm -f main.exe
-
-# Phony targets
-.PHONY: all clean copy_dll build
