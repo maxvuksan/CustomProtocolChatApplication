@@ -1,4 +1,4 @@
 # Custom Protocol Chat Application
 
-# compile with `make`
-# run with `main.exe`
+compile with `make`
+run with `main.exe`
