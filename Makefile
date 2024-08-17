@@ -10,7 +10,7 @@ LIBS = -lglfw3dll -lopengl32
 
 # Source files
 SRCS = ./src/glad.c \
-       ./src/main.cpp \
+       ./src/*.cpp \
        ./include/imgui/imgui_impl_glfw.cpp \
        ./include/imgui/imgui_impl_opengl3.cpp \
        ./include/imgui/imgui.cpp \
