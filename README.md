@@ -2,6 +2,8 @@
 
 Protocol Specification https://github.com/xvk-64/2024-secure-programming-protocol
 
-Compile with `make`
+Project contains both a client program and server program
 
-Run with `main.exe`
+Compile client with `make client` run with `client.exe`
+
+Compile client with `make server` run with `server.exe`
