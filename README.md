@@ -1,4 +1,7 @@
-# Custom Protocol Chat Application
+# Chat Application
 
-compile with `make`
-run with `main.exe`
+Protocol Specification https://github.com/xvk-64/2024-secure-programming-protocol
+
+Compile with `make`
+
+Run with `main.exe`
