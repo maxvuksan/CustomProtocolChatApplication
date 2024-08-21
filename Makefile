@@ -1,36 +1,34 @@
-# Compiler
-CXX = g++
 
-# Directories
-INCLUDE_DIRS = -I./include
-LIB_DIRS = -L./lib
+
+SHARED_INCLUDE = -I./include
+SHARED_LIBS = -lws2_32 -lmswsock
+SHARED_FLAGS = -std=c++17 -DASIO_STANDALONE -D_WEBSOCKETPP_CPP11_THREAD_
+
+# forcing make client and make server to always make
+FORCE:
+
+# Client ------------------------------------------------------------------------------------------------
 
 # Libraries
-LIBS = -lglfw3dll -lopengl32
+CLIENT_LIBS = -lglfw3dll -lopengl32
 
-# Source files
-SRCS = ./src/glad.c \
-       ./src/*.cpp \
-       ./include/imgui/imgui_impl_glfw.cpp \
-       ./include/imgui/imgui_impl_opengl3.cpp \
-       ./include/imgui/imgui.cpp \
-       ./include/imgui/imgui_demo.cpp \
-       ./include/imgui/imgui_draw.cpp \
-       ./include/imgui/imgui_tables.cpp \
-       ./include/imgui/imgui_widgets.cpp
-
-# Target executable
-
-# Compilation and linking flags
-CXXFLAGS = -std=c++17 $(INCLUDE_DIRS)
-LDFLAGS = $(LIB_DIRS) $(LIBS)
-
+CLIENT_SRCS = ./Client/src/glad.c \
+       ./Client/src/*.cpp \
+       ./Client/include/imgui/*.cpp \
 
 # Compile and link in one step
-compile:
-	$(CXX) $(CXXFLAGS) $(SRCS) -o main.exe $(LDFLAGS)
+client: FORCE
+	g++ $(CLIENT_SRCS) $(CLIENT_LIBS) -o client.exe -I./Client/include -L./Client/lib $(SHARED_INCLUDE) $(SHARED_LIBS) $(SHARED_FLAGS)
 
 
-# Clean up build files
-clean:
-	rm -f main.exe
+
+
+# Server ------------------------------------------------------------------------------------------------
+
+SERVER_SRCS = ./Server/src/*.cpp \
+
+# Compile and link in one step
+server: FORCE
+	g++ $(SERVER_SRCS) -o server.exe $(SHARED_INCLUDE) $(SHARED_LIBS) $(SHARED_FLAGS)
+
+
