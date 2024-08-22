@@ -2,7 +2,7 @@
 
 void ChatApplication::Start(){
 
-    std::cout << "Chat App Started!";
+    Configure_FontList();
 
     users = {
             "lexi",
@@ -15,17 +15,79 @@ void ChatApplication::Start(){
     };
     selectedUser = 0;
 
+
+    messages = {
+        ChatMessage({"Hey guys how is everyone"}),
+        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
+        ChatMessage({"You sure are a cool cat, aren't youu the coolest"}),
+        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
+        ChatMessage({"You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest!"}),ChatMessage({"Hey guys how is everyone"}),
+        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
+        ChatMessage({"You sure are a cool cat, aren't youu the coolest"}),
+        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
+        ChatMessage({"You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest!"}),
+
+    };
+
 }
+
+void ChatApplication::Configure_FontList(){
+
+    // FONT_PRIMARY
+    FontData primaryFont;
+    primaryFont.path = "Client/assets/fonts/gg sans Regular.ttf";
+    primaryFont.colour = ImVec4(1.0,1.0,1.0,1.0);
+    primaryFont.characterSize = 20;
+
+    // FONT_SECONDARY
+    FontData secondaryFont;
+    secondaryFont.path = "Client/assets/fonts/gg sans Regular.ttf";
+    secondaryFont.colour = ImVec4(1.0,1.0,1.0,0.7);
+    secondaryFont.characterSize = 14;
+
+
+    fontList.push_back(primaryFont);
+    fontList.push_back(secondaryFont);
+
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    for(int i = 0; i < fontList.size(); i++){
+
+        
+        fontList[i].imguiFontRef = io.Fonts->AddFontFromFileTTF(fontList[i].path.c_str(), fontList[i].characterSize); 
+
+        if (fontList[i].imguiFontRef == nullptr) {
+            std::cerr << "Failed to load font: " << fontList[i].path << std::endl;
+        }
+
+
+        if(i == 0){
+            // set font at index 0 as the default
+            io.FontDefault = io.Fonts->Fonts.back(); 
+        }
+    }
+
+}
+
+void ChatApplication::PushFont(Font font_index){
+    ImGui::PushFont(fontList[font_index].imguiFontRef); // font
+    ImGui::PushStyleColor(ImGuiCol_Text, fontList[font_index].colour);// font colour
+}
+void ChatApplication::PopFont(){
+    ImGui::PopFont();
+    ImGui::PopStyleColor(1);
+}
+
 
 void ChatApplication::Update(){
 
+    
     // Max's example ImGui window! ----------------------------------------------------------------------
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
-    ImGui::Begin("Example Window"); // Create a new ImGui window
+    ImGui::Begin("Example Window", nullptr); // Create a new ImGui window
     
-        ImGui::Text("Hello, world!");   // Display some text
-        
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0)); // Remove spacing between items
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0); // Remove padding inside the button
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10,10));
@@ -66,30 +128,33 @@ void ChatApplication::Update(){
     ImGui::PopStyleVar(1);
 
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(25, 25));
+    ImGui::Begin("Messages", nullptr); 
+    ImGui::PopStyleVar(1);
 
-
-
-    ImGui::Begin("Example Window 3"); // Create a new ImGui window
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,25));
     
-        ImGui::Text("Hello, world!");   // Display some text
+    for(int i = 0; i < messages.size(); i++){
         
-        if (ImGui::Button("Click me"))  // Add a button
-        {
-            std::cout << "Button clicked!" << std::endl;
-        }
-
-    ImGui::End(); // End the ImGui window
-
-    ImGui::Begin("Example 2"); // Create a new ImGui window
-    
-        ImGui::Text("Hello, world!");   // Display some text
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,5));
         
-        if (ImGui::Button("Click me"))  // Add a button
-        {
-            std::cout << "Button clicked!" << std::endl;
-        }
+        // draw date
+        PushFont(FONT_SECONDARY);
+        ImGui::Text(messages[i].date.c_str());
+        PopFont();
 
-    ImGui::End(); // End the ImGui window
+        ImGui::PopStyleVar(1);
+
+        
+        PushFont(FONT_PRIMARY);
+        ImGui::Text(messages[i].message.c_str());
+        PopFont();
+        
+    }
+
+    ImGui::PopStyleVar(1);
+
+    ImGui::End();
 
 }
 

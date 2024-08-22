@@ -51,6 +51,7 @@
     #endif
 #endif
 
+
 #if defined(_WEBSOCKETPP_MINGW_THREAD_)
     #include <mingw-threads/mingw.thread.h>
     #include <mingw-threads/mingw.mutex.h>

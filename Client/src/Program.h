@@ -22,6 +22,10 @@ class Program {
 
         void Run();
 
+
+        int GetWindowWidth() { return windowWidth; }
+        int GetWindowHeight() { return windowHeight; }
+
         
     protected:
 
@@ -37,7 +41,8 @@ class Program {
 
         GLFWmonitor* monitor;
         GLFWwindow* window;
-    
 
+        static int windowWidth;
+        static int windowHeight;
 
 };

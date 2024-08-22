@@ -11,6 +11,8 @@ void on_message(server_type* s, websocketpp::connection_hdl hdl, server_type::me
 
 int main() {
 
+    std::mutex adad;
+
     try {
         // Create a server endpoint
         server_type server;
