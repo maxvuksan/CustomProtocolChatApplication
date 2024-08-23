@@ -2,16 +2,12 @@
 #include "Program.h"
 #include <vector>
 #include "Font.h"
-
-
-struct ChatMessage{
-    std::string message;
-    std::string date = "08/16/2024 12:32 PM";
-};
-
-
-
-
+#include <unordered_map>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+#include "ChatMessage.h"
+#include "Client.h"
 
 class ChatApplication : public Program{
 
@@ -25,21 +21,26 @@ class ChatApplication : public Program{
         */
         void Configure_FontList();
 
+        std::string GetCurrentTime(bool forUser);
 
-        void PushFont(Font font_index);
+
+        void PushFont(Font fontIndex, ImVec4 colour = ImVec4(0.0,0.0,0.0,0.0));
         void PopFont();
 
 
 
     private:
-
-        char chatBuffer[100];
+        
+        Client currentClient;
 
         std::vector<FontData> fontList;
 
-        std::vector<ChatMessage> messages;
+        int counter = 0;
 
-        std::vector<std::string> users;
+        std::vector<ImVec4> colourVector;
+        
         int selectedUser;
+
+       
 
 };

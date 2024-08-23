@@ -12,7 +12,7 @@
 class Program {
 
     public:
-        Program(int windowWidth = 1000, int windowHeight = 800, std::string windowTitle = "Program");
+        Program(int windowWidth = 1000, int windowHeight = 500, std::string windowTitle = "Program");
         ~Program();
 
         // called right before Run()
@@ -39,6 +39,7 @@ class Program {
         */
         static void Framebuffer_Size_Callback(GLFWwindow *window, int width, int height);
 
+        
         GLFWmonitor* monitor;
         GLFWwindow* window;
 

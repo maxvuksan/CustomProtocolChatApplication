@@ -2,7 +2,7 @@
 #include <thread>
 
 int main(){
-
+    
     ChatApplication program;
     program.Run();
 }

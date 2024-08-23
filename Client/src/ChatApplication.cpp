@@ -1,34 +1,11 @@
 #include "ChatApplication.h"
+#include "Client.h"
+
 
 void ChatApplication::Start(){
-
     Configure_FontList();
-
-    users = {
-            "lexi",
-            "ash",
-            "max",
-            "john star",
-            "tony butcher",
-            "catlover123",
-            "SAZY11",
-    };
+    counter = 0;
     selectedUser = 0;
-
-
-    messages = {
-        ChatMessage({"Hey guys how is everyone"}),
-        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
-        ChatMessage({"You sure are a cool cat, aren't youu the coolest"}),
-        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
-        ChatMessage({"You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest!"}),ChatMessage({"Hey guys how is everyone"}),
-        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
-        ChatMessage({"You sure are a cool cat, aren't youu the coolest"}),
-        ChatMessage({"No way! i'm the coolest cat ever wow wow wow"}),
-        ChatMessage({"You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest! You sure are a cool cat, aren't youu the coolest!"}),
-
-    };
-
 }
 
 void ChatApplication::Configure_FontList(){
@@ -37,20 +14,35 @@ void ChatApplication::Configure_FontList(){
     FontData primaryFont;
     primaryFont.path = "Client/assets/fonts/gg sans Regular.ttf";
     primaryFont.colour = ImVec4(1.0,1.0,1.0,1.0);
-    primaryFont.characterSize = 20;
+    primaryFont.characterSize = 24;
 
     // FONT_SECONDARY
     FontData secondaryFont;
     secondaryFont.path = "Client/assets/fonts/gg sans Regular.ttf";
     secondaryFont.colour = ImVec4(1.0,1.0,1.0,0.7);
-    secondaryFont.characterSize = 14;
+    secondaryFont.characterSize = 20;
+
+    // FONT_BOLD
+    FontData boldFont;
+    boldFont.path = "Client/assets/fonts/gg sans Bold.ttf";
+    boldFont.colour = ImVec4(1.0,1.0,1.0,1.0);
+    boldFont.characterSize = 20;
 
 
     fontList.push_back(primaryFont);
     fontList.push_back(secondaryFont);
-
+    fontList.push_back(boldFont);
 
     ImGuiIO& io = ImGui::GetIO();
+
+    colourVector = {
+        {0.16, 0.16, 0.18, 1.0}, // blackish
+        {0.42, 0.34, 0.44, 1.0}, // purple but not vibrant
+        {0.85, 0.78, 0.75, 1.0}, // grey beige
+        {0.98, 0.51, 0.52, 1.0}, // pink/salmon
+        {0.69, 0.66, 0.89, 1.0}, // pastel blue
+        {1.0, 1.0, 1.0, 1.0}, // white
+    };
 
     for(int i = 0; i < fontList.size(); i++){
 
@@ -70,18 +62,44 @@ void ChatApplication::Configure_FontList(){
 
 }
 
-void ChatApplication::PushFont(Font font_index){
-    ImGui::PushFont(fontList[font_index].imguiFontRef); // font
-    ImGui::PushStyleColor(ImGuiCol_Text, fontList[font_index].colour);// font colour
+void ChatApplication::PushFont(Font fontIndex, ImVec4 colour){
+    ImGui::PushFont(fontList[fontIndex].imguiFontRef); // font
+
+    if(colour.w == 0.0){
+        colour = fontList[fontIndex].colour;
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_Text, colour);// font colour
 }
 void ChatApplication::PopFont(){
     ImGui::PopFont();
     ImGui::PopStyleColor(1);
 }
 
+std::string ChatApplication::GetCurrentTime(bool forUser){
+    // Get current time
+    time_t now = time(0);
+    tm* localtm = localtime(&now);
+    
+    // Create a string stream to format the time
+    std::ostringstream oss;
+    
+    // Format the time as 22/08/24 1:19 PM
+
+    if(forUser){
+        oss << std::put_time(localtm, "%d/%m/%y %I:%M:%S %p");
+    } else {
+        oss << std::put_time(localtm, "%d/%m/%y %I:%M %p");
+    }
+    
+    
+    return oss.str();
+}
+
 
 void ChatApplication::Update(){
-
+    static char inputBuffer[256] = "";  // Buffer to hold the input text
+    static bool scroll = true;
     
     // Max's example ImGui window! ----------------------------------------------------------------------
 
@@ -101,15 +119,16 @@ void ChatApplication::Update(){
         ImVec2 windowSize = ImGui::GetWindowSize();
         float buttonWidth = windowSize.x - ImGui::GetStyle().WindowPadding.x * 2.0f; // Adjust for padding
 
-        for(int i = 0; i < users.size(); i++){
+        for(int i = 0; i < currentClient.GetActiveUsers().size(); i++){
 
             if(i == selectedUser){
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.45f, 0.45f, 0.55f, 1.00f)); 
             }
 
             int newSelectedUser = selectedUser;
-            if (ImGui::Button(users[i].c_str(), ImVec2(buttonWidth, 0))){ // Add a button
+            if (ImGui::Button(currentClient.GetActiveUsers()[i].username.c_str(), ImVec2(buttonWidth, 0))){ // Add a button
                 newSelectedUser = i;
+                scroll = true;
             }
 
             if(i == selectedUser){
@@ -121,7 +140,6 @@ void ChatApplication::Update(){
         }
 
         ImGui::PopStyleVar(4); 
-
         ImGui::PopStyleColor(2);
 
     ImGui::End(); // End the ImGui window
@@ -129,32 +147,87 @@ void ChatApplication::Update(){
 
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(25, 25));
-    ImGui::Begin("Messages", nullptr); 
+    ImGui::Begin("Messages", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse); 
     ImGui::PopStyleVar(1);
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,25));
+
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+    float inputBoxHeight = 30.0f; // Adjust this value according to your input box height
+    ImVec2 scrollAreaSize = ImVec2(contentRegion.x, contentRegion.y - 40); // Reserve space for the input box
+
+    ImGui::BeginChild("MessagesScrollArea", scrollAreaSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
     
-    for(int i = 0; i < messages.size(); i++){
+    auto messages = currentClient.GetAllMessages();
+
+    for(int i = 0; i < messages[currentClient.GetActiveUsers()[selectedUser].username].size(); i++){
         
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,5));
         
+        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy == "me"){
+            PushFont(FONT_BOLD, colourVector[5]);
+        } else {
+            PushFont(FONT_BOLD, colourVector[currentClient.GetColourIndex(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy)]);
+        }
+
+        ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy.c_str());
+        ImGui::SameLine();
+        ImGui::Text("   ");
+        ImGui::SameLine();
+        PopFont();
+
         // draw date
         PushFont(FONT_SECONDARY);
-        ImGui::Text(messages[i].date.c_str());
+        ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).date.c_str());
         PopFont();
 
         ImGui::PopStyleVar(1);
-
         
         PushFont(FONT_PRIMARY);
-        ImGui::Text(messages[i].message.c_str());
+        ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).message.c_str());
         PopFont();
         
     }
 
+    if(scroll){
+        ImGui::SetScrollHereY(1.0f);
+        scroll = false;
+    }
+
+    
+
+    ImGui::EndChild(); // End the scrollable area
+
     ImGui::PopStyleVar(1);
 
-    ImGui::End();
+    // Add a separator and a text box at the bottom of the window
+    ImGui::Separator();
 
+    ImGui::SetNextItemWidth(contentRegion.x);
+
+    if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+
+        // Process the input here, for example, send the message
+        std::string newMessage(inputBuffer);
+        if (!newMessage.empty()) {
+            // Add the new message to the selected user's message list (pseudo-code)
+            currentClient.PushMessage({newMessage, "me", GetCurrentTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
+
+            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentTime(true), currentClient.GetActiveUsers()[selectedUser].username);
+
+            // Clear the input buffer
+            inputBuffer[0] = '\0';
+            ImGui::SetKeyboardFocusHere(-1);
+            scroll = true;
+
+            counter++;
+            if(counter == 5){
+                currentClient.UserLeave("lexi");
+                currentClient.UserJoin("luke");
+            }
+        }
+    } 
+
+    ImGui::End();
 }
 

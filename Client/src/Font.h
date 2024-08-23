@@ -8,6 +8,7 @@ enum Font{
 
     FONT_PRIMARY,
     FONT_SECONDARY,
+    FONT_BOLD,
 
     FONT_NUMBER_OF_FONTS, // total number of font types
 };
