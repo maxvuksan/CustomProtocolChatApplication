@@ -5,7 +5,10 @@
 class ClientSocket {
     public:
         void Start();
+        void End();
 
+        void SendPayload();
     private:
+        
 
 };

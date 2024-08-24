@@ -236,7 +236,8 @@ void ChatApplication::Update(){
 }
 
 void ChatApplication::End() {
+    socket.End();
     socketThread.join();
 }
-/// Websocket++
+
 
