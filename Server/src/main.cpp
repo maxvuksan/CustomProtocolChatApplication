@@ -6,7 +6,11 @@ typedef websocketpp::server<websocketpp::config::asio> server_type;
 
 // Define a callback for handling messages
 void on_message(server_type* s, websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
-    s->send(hdl, msg->get_payload(), msg->get_opcode());
+
+    std:: cout << "Recieved payload!" << std::endl;
+    std::cout << msg->get_payload() << std::endl;
+    
+    s->send(hdl, "Message Recieved", msg->get_opcode());
 }
 
 int main() {
@@ -20,9 +24,7 @@ int main() {
         server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
         // Set the message handler
-        server.set_message_handler([&server](websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
-            on_message(&server, hdl, msg);
-        });
+        server.set_message_handler(websocketpp::lib::bind(&on_message, &server, websocketpp::lib::placeholders::_1, websocketpp::lib::placeholders::_2));
 
         // Set the listening port
         server.init_asio();
