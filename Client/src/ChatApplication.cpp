@@ -3,6 +3,10 @@
 
 
 void ChatApplication::Start(){
+    // Creating thread for client socket
+    // Currently not being joined anywhere
+    socketThread = std::thread(&ClientSocket::Start, &socket); 
+
     Configure_FontList();
     counter = 0;
     selectedUser = 0;
@@ -230,4 +234,9 @@ void ChatApplication::Update(){
 
     ImGui::End();
 }
+
+void ChatApplication::End() {
+    socketThread.join();
+}
+/// Websocket++
 

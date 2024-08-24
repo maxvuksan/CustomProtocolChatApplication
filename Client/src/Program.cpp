@@ -171,6 +171,8 @@ void Program::Run(){
         glfwPollEvents();
     }
 
+
+    End();
 }
 
 
@@ -184,6 +186,8 @@ void Program::Framebuffer_Size_Callback(GLFWwindow *window, int width, int heigh
 
 
 Program::~Program(){
+
+    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

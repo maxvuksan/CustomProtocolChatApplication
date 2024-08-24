@@ -19,6 +19,8 @@ class Program {
         virtual void Start(){}
         // called every frame of Run()
         virtual void Update(){}
+        // called on termination
+        virtual void End(){}
 
         void Run();
 

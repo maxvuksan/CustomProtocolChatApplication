@@ -9,12 +9,17 @@
 #include "ChatMessage.h"
 #include "Client.h"
 
+// Websocket++
+#include "ClientSocket.h"
+#include <thread>
+
 class ChatApplication : public Program{
 
     public:
         
         void Start() override;
         void Update() override;
+        void End() override;
 
         /*
             Populates the fontList vector (configuring each font respectivley)
@@ -40,6 +45,10 @@ class ChatApplication : public Program{
         std::vector<ImVec4> colourVector;
         
         int selectedUser;
+
+        // Socket variables
+        ClientSocket socket;
+        std::thread socketThread;
 
        
 
