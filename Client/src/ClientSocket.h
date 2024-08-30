@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ChatMessage.h"
 #include <thread>
 
 class ClientSocket {
@@ -7,7 +8,7 @@ class ClientSocket {
         void Start();
         void End();
 
-        void SendPayload();
+        int SendChatMessage(ChatMessage chatMessage);
     private:
         
 

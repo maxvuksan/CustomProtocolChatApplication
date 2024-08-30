@@ -4,7 +4,6 @@
 
 void ChatApplication::Start(){
     // Creating thread for client socket
-    // Currently not being joined anywhere
     socketThread = std::thread(&ClientSocket::Start, &socket); 
 
     Configure_FontList();
@@ -218,6 +217,11 @@ void ChatApplication::Update(){
             currentClient.PushMessage({newMessage, "me", GetCurrentTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
 
             selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentTime(true), currentClient.GetActiveUsers()[selectedUser].username);
+
+            /// Send to server
+            ChatMessage cm;
+            socket.SendChatMessage(cm);
+            /// Send to server
 
             // Clear the input buffer
             inputBuffer[0] = '\0';

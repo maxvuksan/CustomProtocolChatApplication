@@ -1,10 +1,13 @@
 #include "ClientSocket.h"
+#include "ChatMessage.h"
 #include <iostream>
+#include <json.hpp>
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
 using namespace std;
+using Json = nlohmann::json;
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
@@ -58,7 +61,7 @@ void ClientSocket::Start() {
 
         // Create a connection to the server
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = c.get_connection("ws://192.168.1.109:9002", ec); // NOT ENCRYPTED
+        client::connection_ptr con = c.get_connection("ws://127.0.0.1:9002", ec); // NOT ENCRYPTED
 
         if (ec) {
             std::cout << "Could not create connection: " << ec.message() << std::endl;
@@ -81,7 +84,21 @@ void ClientSocket::End() {
     c.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");
 }
 
-void ClientSocket::SendPayload() {
-    c.send(global_hdl, "Foo", websocketpp::frame::opcode::text);
+int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
+
+    // Creating json
+    Json jsonMessage;
+
+    jsonMessage["type"] = "signed_data";
+    jsonMessage["data"]["type"] = "chat";
+    jsonMessage["counter"] = "NEED TO DO"; // TEMP
+    jsonMessage["signature"] = "NEED TO DO"; // TEMP
+
+    // Chat part
+    jsonMessage["data"]["chat"] = chatMessage.message;
+
+    c.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+
+    return 0;
 }
 

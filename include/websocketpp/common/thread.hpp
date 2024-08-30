@@ -60,10 +60,6 @@
     #include <thread>
     #include <mutex>
     #include <condition_variable>
-#else
-    #include <boost/thread.hpp>
-    #include <boost/thread/mutex.hpp>
-    #include <boost/thread/condition_variable.hpp>
 #endif
 
 namespace websocketpp {
@@ -75,12 +71,6 @@ namespace lib {
     using std::thread;
     using std::unique_lock;
     using std::condition_variable;
-#else
-    using boost::mutex;
-    using boost::lock_guard;
-    using boost::thread;
-    using boost::unique_lock;
-    using boost::condition_variable;
 #endif
 
 } // namespace lib
