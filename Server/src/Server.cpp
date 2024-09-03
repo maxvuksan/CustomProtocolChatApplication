@@ -4,8 +4,64 @@ using namespace std;
 
 int Server::StartServer() {
 
-    hostThread = thread(&ServerHost::StartServer, &serverHost);
+    int port;
+    cout << "Enter server port " << endl;
+    cin >> port;
+    cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
+    
+    hostThread = thread(&ServerHost::StartServer, &serverHost, port);
 
+    while (1) {
+        string command;
+        getline(cin, command);
+
+        CommandManager(command);
+    }
+
+    return 0;
+}
+
+void Server::CommandManager(string command) {
+    istringstream iss(command);
+
+    string word;
+    string sections[5];
+    
+    int counter = 0;
+    while (iss >> word && counter < 5) {
+        sections[counter] = word;
+        counter++;
+    }
+
+    // Commands
+    int er = -2;
+    if (sections[0] == "connect") {
+        er = ConnectToServer(sections[1]);
+    } 
+
+    switch (er) {
+        case -2:
+            cout << "Unknown command" << endl;
+            break;
+    }
+}
+
+int Server::ConnectToServer(string ip) {
+
+    // ServerSocket serverSocket;
+
+    // socketThreads.emplace_back(&ServerSocket::ConnectToServer, &serverSocket, ip);
+    // serverSockets.push_back(serverSocket);
+
+    asio::io_context io_context;
+
+    if (count == 0) {
+        t1 = thread(&ServerSocket::ConnectToServer, &s1, ip);        
+    } else {
+        t2 = thread(&ServerSocket::ConnectToServer, &s2, ip);     
+    }
+
+    count++;
     return 0;
 }
 

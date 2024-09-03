@@ -1,11 +1,13 @@
 #include "ServerHost.h"
 
+using namespace std;
+
 // Define a callback for handling messages
 void on_message(server_type* s, websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-void ServerHost::StartServer() {
+void ServerHost::StartServer(int port) {
     try {
         // Create a server endpoint
         server_type server;
@@ -21,10 +23,10 @@ void ServerHost::StartServer() {
 
         // Set the listening port
         server.init_asio();
-        server.listen(9002);
+        server.listen(port);
         server.start_accept();
 
-        std::cout << "Starting server on port 9002\n";
+        cout << "Server started on port: " << port << endl; 
 
         // Start the ASIO io_service loop
         server.run();
