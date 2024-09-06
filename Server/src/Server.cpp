@@ -48,20 +48,18 @@ void Server::CommandManager(string command) {
 
 int Server::ConnectToServer(string ip) {
 
-    // ServerSocket serverSocket;
-
-    // socketThreads.emplace_back(&ServerSocket::ConnectToServer, &serverSocket, ip);
-    // serverSockets.push_back(serverSocket);
-
-    asio::io_context io_context;
-
     if (count == 0) {
-        t1 = thread(&ServerSocket::ConnectToServer, &s1, ip);        
+        socketThread1 = thread(&ServerSocket::ConnectToServer, &serverSocket1, ip);
+        count = 1;
     } else {
-        t2 = thread(&ServerSocket::ConnectToServer, &s2, ip);     
+        socketThread2 = thread(&ServerSocket::ConnectToServer, &serverSocket2, ip);
     }
+    
 
-    count++;
+
+
+    // serverSocket1.ConnectToServer(ip);
+    
     return 0;
 }
 

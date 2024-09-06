@@ -14,4 +14,5 @@ class ServerHost {
         void Callback_OnMessage(websocketpp::connection_hdl connection_hdl, server_type::message_ptr message);
 
     private:
+        
 };
