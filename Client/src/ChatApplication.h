@@ -46,6 +46,7 @@ class ChatApplication : public Program{
         bool connectedToServer = false;
 
         std::vector<ImVec4> colourVector;
+        std::vector<ImVec4> colourVectorU32;
         
         int selectedUser;
 
