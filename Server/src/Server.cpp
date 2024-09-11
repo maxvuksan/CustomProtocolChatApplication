@@ -47,18 +47,11 @@ void Server::CommandManager(string command) {
 }
 
 int Server::ConnectToServer(string ip) {
-
-    if (count == 0) {
-        socketThread1 = thread(&ServerSocket::ConnectToServer, &serverSocket1, ip);
-        count = 1;
-    } else {
-        socketThread2 = thread(&ServerSocket::ConnectToServer, &serverSocket2, ip);
-    }
     
+    socketList.emplace_back();
 
-
-
-    // serverSocket1.ConnectToServer(ip);
+    ServerSocket & lastSocket = socketList.back(); 
+    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), ip);
     
     return 0;
 }

@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <sstream>
+#include <list>
 
 #include "ServerSocket.h"
 #include "ServerHost.h"
@@ -20,7 +21,10 @@ class Server {
         ServerHost serverHost;
         std::thread hostThread;
 
-        int count = 0;
+
+        std::list<ServerSocket> socketList;
+        std::list<std::thread> threadList;
+        
         ServerSocket serverSocket1;
         std::thread socketThread1;  
 
