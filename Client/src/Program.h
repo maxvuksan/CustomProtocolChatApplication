@@ -28,6 +28,8 @@ class Program {
         int GetWindowWidth() { return windowWidth; }
         int GetWindowHeight() { return windowHeight; }
 
+        GLFWwindow* GetWindow(){return window;}
+
         
     protected:
 

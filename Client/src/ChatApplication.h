@@ -21,6 +21,8 @@ class ChatApplication : public Program{
         void Update() override;
         void End() override;
 
+        void DrawCustomUserButtons(bool& scroll);
+
         /*
             Populates the fontList vector (configuring each font respectivley)
         */

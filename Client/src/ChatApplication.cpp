@@ -1,5 +1,6 @@
 #include "ChatApplication.h"
 #include "Client.h"
+#include "Globals.h"
 
 
 void ChatApplication::Start(){
@@ -100,67 +101,123 @@ std::string ChatApplication::GetCurrentTime(bool forUser){
 }
 
 
+void ChatApplication::DrawCustomUserButtons(bool& scroll){
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0)); // Remove spacing between items
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0); // Remove padding inside the button
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10,10));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.70f, 0.70f, 0.70f, 0.65f)); // Red border
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.09f, 0.09f, 0.15f, 1.00f)); 
+
+
+    // Get the window size and set the button width to match it
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    ImVec2 childSize = ImVec2(windowSize.x, (currentClient.GetActiveUsers().size() + 1) * (GLOBAL_PADDING + 10));
+
+
+    // only have scroll area if required
+    if(childSize.y > windowSize.y){
+        ImGui::BeginChild("ScrollingChild", childSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+    }
+
+
+    for(int i = 0; i < currentClient.GetActiveUsers().size(); i++){
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 button_size = ImVec2(windowSize.x - ImGui::GetStyle().WindowPadding.x * 2.0f, GLOBAL_PADDING + 10); // Adjust size as needed
+        ImVec2 button_pos(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y + GLOBAL_PADDING);
+        button_pos.y += button_size.y * i;
+
+        // Draw the button background
+        ImU32 button_color = IM_COL32(200, 200, 200, 255); // Light gray
+
+        bool hovered = false;
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        if(mousePos.x > button_pos.x && mousePos.x < button_pos.x + button_size.x &&
+           mousePos.y > button_pos.y && mousePos.y < button_pos.y + button_size.y){
+
+            glfwSetCursor(GetWindow(), glfwCreateStandardCursor(GLFW_HAND_CURSOR));
+
+
+            hovered = true;
+            if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && selectedUser != i){
+                scroll = true;
+                selectedUser = i;
+            }
+        }
+
+        ImVec2 text1_size = io.Fonts->Fonts[0]->CalcTextSizeA(16.0f, FLT_MAX, 0.0f, currentClient.GetActiveUsers()[i].username.c_str());
+        ImVec2 text1_pos = ImVec2(30 + button_pos.x, (button_size.y - text1_size.y) * 0.5f + button_pos.y - 5);
+
+        if(i == selectedUser){
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_ACCENT_COLOUR_DARK_U32);
+            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_ACCENT_COLOUR_U32, 0.0f, 0); // Border
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, GLOBAL_ACCENT_COLOUR_U32, currentClient.GetActiveUsers()[i].username.c_str());
+
+        }
+        else if(hovered){
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].username.c_str());
+        }
+        else{
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].username.c_str());
+        }
+
+        int newSelectedUser = selectedUser;
+
+    }
+
+    // end scroll area if required
+    if(childSize.y > windowSize.y){
+        ImGui::EndChild();
+    }
+
+    ImGui::PopStyleVar(4); 
+    ImGui::PopStyleColor(2);
+
+}
+
+
+
 void ChatApplication::Update(){
+
     static char inputBuffer[256] = "";  // Buffer to hold the input text
     static bool scroll = true;
     
-    // Max's example ImGui window! ----------------------------------------------------------------------
+    //glfwSetCursor(GetWindow(), glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
-    ImGui::Begin("Example Window", nullptr); // Create a new ImGui window
+    ImGui::Begin("Users", nullptr); // Create a new ImGui window
     
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0)); // Remove spacing between items
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0); // Remove padding inside the button
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10,10));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
-
-        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.70f, 0.70f, 0.70f, 0.65f)); // Red border
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.09f, 0.09f, 0.15f, 1.00f)); 
-
-
-        // Get the window size and set the button width to match it
-        ImVec2 windowSize = ImGui::GetWindowSize();
-        float buttonWidth = windowSize.x - ImGui::GetStyle().WindowPadding.x * 2.0f; // Adjust for padding
-
-        for(int i = 0; i < currentClient.GetActiveUsers().size(); i++){
-
-            if(i == selectedUser){
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.45f, 0.45f, 0.55f, 1.00f)); 
-            }
-
-            int newSelectedUser = selectedUser;
-            if (ImGui::Button(currentClient.GetActiveUsers()[i].username.c_str(), ImVec2(buttonWidth, 0))){ // Add a button
-                newSelectedUser = i;
-                scroll = true;
-            }
-
-            if(i == selectedUser){
-                ImGui::PopStyleColor(1); 
-            }
-
-            selectedUser = newSelectedUser;
-
-        }
-
-        ImGui::PopStyleVar(4); 
-        ImGui::PopStyleColor(2);
+    DrawCustomUserButtons(scroll);
 
     ImGui::End(); // End the ImGui window
     ImGui::PopStyleVar(1);
 
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(25, 25));
-    ImGui::Begin("Messages", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse); 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
+    ImGui::Begin("Messages", nullptr, ImGuiWindowFlags_NoScrollbar); 
     ImGui::PopStyleVar(1);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,25));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
 
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
     float inputBoxHeight = 30.0f; // Adjust this value according to your input box height
-    ImVec2 scrollAreaSize = ImVec2(contentRegion.x, contentRegion.y - 40); // Reserve space for the input box
+    ImVec2 scrollAreaSize = ImVec2(contentRegion.x, contentRegion.y - 50); // Reserve space for the input box
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 20);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
+    ImGui::PushStyleColor(ImGuiCol_Border, GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
     ImGui::BeginChild("MessagesScrollArea", scrollAreaSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
     
+
     auto messages = currentClient.GetAllMessages();
 
     for(int i = 0; i < messages[currentClient.GetActiveUsers()[selectedUser].username].size(); i++){
@@ -200,11 +257,11 @@ void ChatApplication::Update(){
     
 
     ImGui::EndChild(); // End the scrollable area
-
+    ImGui::PopStyleVar(3);
     ImGui::PopStyleVar(1);
+    ImGui::PopStyleColor(1);
 
     // Add a separator and a text box at the bottom of the window
-    ImGui::Separator();
 
     ImGui::SetNextItemWidth(contentRegion.x);
 
@@ -218,21 +275,11 @@ void ChatApplication::Update(){
 
             selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 
-            /// Send to server
-            ChatMessage cm;
-            socket.SendChatMessage(cm);
-            /// Send to server
-
             // Clear the input buffer
             inputBuffer[0] = '\0';
             ImGui::SetKeyboardFocusHere(-1);
             scroll = true;
 
-            counter++;
-            if(counter == 5){
-                currentClient.UserLeave("lexi");
-                currentClient.UserJoin("luke");
-            }
         }
     } 
 
