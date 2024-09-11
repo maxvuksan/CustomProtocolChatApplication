@@ -5,7 +5,7 @@
 
 class ClientSocket {
     public:
-        void Start();
+        void Start(std::string finalAddress);
         void End();
 
         int SendChatMessage(ChatMessage chatMessage);

@@ -5,10 +5,8 @@
 
 void ChatApplication::Start(){
     // Creating thread for client socket
-    socketThread = std::thread(&ClientSocket::Start, &socket); 
 
     Configure_FontList();
-    counter = 0;
     selectedUser = 0;
 }
 
@@ -103,6 +101,10 @@ std::string ChatApplication::GetCurrentTime(bool forUser){
 
 void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
+    if(!connectedToServer){
+        return;
+    }
+
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0)); // Remove spacing between items
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0); // Remove padding inside the button
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10,10));
@@ -183,9 +185,55 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
 }
 
+void ChatApplication::DrawConnectToServerModal(){
+
+    static char serverAddressBuffer[256] = "";
+    static char serverPortBuffer[256] = "8000";
+
+    ImVec2 modalSize = ImVec2(400,200);
+
+    // Set size of the modal
+    ImGui::SetNextWindowSize(modalSize, ImGuiCond_Always);
+
+    // Center the modal on the screen
+    ImVec2 windowPos = ImVec2((ImGui::GetIO().DisplaySize.x - modalSize.x) * 0.5f,
+                              (ImGui::GetIO().DisplaySize.y - modalSize.y) * 0.5f);
+
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
+
+    if(ImGui::BeginPopupModal("Select Server", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)){
+
+        ImGui::Text("Address");
+        ImGui::InputText("##Address", serverAddressBuffer, IM_ARRAYSIZE(serverAddressBuffer));
+        ImGui::Text("Port");
+        ImGui::InputText("##Port", serverPortBuffer, IM_ARRAYSIZE(serverPortBuffer));
+
+        std::string address(serverAddressBuffer);
+        std::string port(serverPortBuffer);
+        std::string finalAddress = address + ":" + port;
+
+        ImGui::Spacing();
+
+        if(ImGui::Button("Connect")){
+            ImGui::CloseCurrentPopup();
+            socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+            connectedToServer = true;
+
+        }
+        
+
+        ImGui::EndPopup();
+    }
+}
+
 
 
 void ChatApplication::Update(){
+
+
+    if(!connectedToServer){
+        ImGui::OpenPopup("Select Server");
+    }
 
     static char inputBuffer[256] = "";  // Buffer to hold the input text
     static bool scroll = true;
@@ -284,11 +332,16 @@ void ChatApplication::Update(){
     } 
 
     ImGui::End();
+
+    DrawConnectToServerModal();
+
 }
 
 void ChatApplication::End() {
-    socket.End();
-    socketThread.join();
+    if(connectedToServer){
+        socket.End();
+        socketThread.join();
+    }
 }
 
 

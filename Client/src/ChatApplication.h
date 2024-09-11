@@ -21,6 +21,7 @@ class ChatApplication : public Program{
         void Update() override;
         void End() override;
 
+        void DrawConnectToServerModal();
         void DrawCustomUserButtons(bool& scroll);
 
         /*
@@ -42,7 +43,7 @@ class ChatApplication : public Program{
 
         std::vector<FontData> fontList;
 
-        int counter = 0;
+        bool connectedToServer = false;
 
         std::vector<ImVec4> colourVector;
         
