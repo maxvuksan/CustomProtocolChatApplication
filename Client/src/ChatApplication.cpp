@@ -200,12 +200,18 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
 void ChatApplication::DrawConnectToServerModal(){
 
+    // no modal if already connected
+    if(connectedState == CS_CONNECTED){
+        return;
+    }
+
     static char serverAddressBuffer[256] = "";
     static char serverPortBuffer[256] = "";
     static bool addressInput = false;
     static bool portInput = false;
     static bool focusOnPort = false;
     static bool showWarning = false;
+
 
 
     ImVec2 modalSize = ImVec2(400,200);
