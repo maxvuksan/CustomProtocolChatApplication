@@ -5,6 +5,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+#include <json.hpp>
+
 typedef websocketpp::server<websocketpp::config::asio> server_type;
 
 class ServerHost {

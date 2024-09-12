@@ -2,9 +2,19 @@
 
 using namespace std;
 
+using Json = nlohmann::json;
+
 // Define a callback for handling messages
 void on_message(server_type* s, websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
-    s->send(hdl, msg->get_payload(), msg->get_opcode());
+    // s->send(hdl, msg->get_payload(), msg->get_opcode());
+
+    Json json = Json::parse(msg->get_payload());
+
+    cout << json << endl;
+}
+
+void OnOpen(websocketpp::connection_hdl hdl) {
+    cout << "Someone connected to server!" << endl;
 }
 
 void ServerHost::StartServer(int port) {
@@ -20,6 +30,8 @@ void ServerHost::StartServer(int port) {
         server.set_message_handler([&server](websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
             on_message(&server, hdl, msg);
         });
+
+        server.set_open_handler(&OnOpen);
 
         // Set the listening port
         server.init_asio();
