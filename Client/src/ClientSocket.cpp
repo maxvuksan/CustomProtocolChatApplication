@@ -27,15 +27,17 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
     // Example: Send a message to the server right after the connection opens
     websocketpp::lib::error_code ec;
-    std::string message = "Hello, WebSocket server! This is a test";
     
-    c.send(hdl, message, websocketpp::frame::opcode::text, ec);
+    //c.send(hdl, message, websocketpp::frame::opcode::text, ec);
 
-    if (ec) {
-        std::cout << "Error sending message: " << ec.message() << std::endl;
-    } else {
-        std::cout << "Message sent: " << message << std::endl;
-    }
+    // Creating json
+    Json jsonMessage;
+
+    jsonMessage["type"] = "data";
+    jsonMessage["data"]["type"] = "hello";
+    jsonMessage["data"]["public_key"] = "0123"; // TEMP
+
+    c.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
 
 
