@@ -41,7 +41,7 @@ void on_open(client* c, websocketpp::connection_hdl hdl) {
 }
 
 /// ClientSocket functions
-void ClientSocket::Start() {
+void ClientSocket::Start(std::string finalAddress) {
     try {
         // Set logging to be pretty verbose (everything except message payloads)
         c.set_access_channels(websocketpp::log::alevel::all);
@@ -58,10 +58,9 @@ void ClientSocket::Start() {
 
         c.set_open_handler(websocketpp::lib::bind(&on_open, &c, websocketpp::lib::placeholders::_1));
 
-
         // Create a connection to the server
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = c.get_connection("ws://127.0.0.1:9002", ec); // NOT ENCRYPTED
+        client::connection_ptr con = c.get_connection("ws://" + finalAddress, ec); // NOT ENCRYPTED
 
         if (ec) {
             std::cout << "Could not create connection: " << ec.message() << std::endl;
@@ -73,12 +72,16 @@ void ClientSocket::Start() {
 
         // Start the ASIO io_service run loop
         c.run();
+
+
+
     } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;
     } catch (...) {
         std::cout << "Unknown exception" << std::endl;
     }    
 }
+
 
 void ClientSocket::End() {
     c.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");

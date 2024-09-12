@@ -5,10 +5,8 @@
 
 void ChatApplication::Start(){
     // Creating thread for client socket
-    socketThread = std::thread(&ClientSocket::Start, &socket); 
 
     Configure_FontList();
-    counter = 0;
     selectedUser = 0;
 }
 
@@ -40,12 +38,20 @@ void ChatApplication::Configure_FontList(){
     ImGuiIO& io = ImGui::GetIO();
 
     colourVector = {
-        {0.16, 0.16, 0.18, 1.0}, // blackish
-        {0.42, 0.34, 0.44, 1.0}, // purple but not vibrant
-        {0.85, 0.78, 0.75, 1.0}, // grey beige
-        {0.98, 0.51, 0.52, 1.0}, // pink/salmon
-        {0.69, 0.66, 0.89, 1.0}, // pastel blue
+        {0.97, 0.96, 0.42, 1.0}, // yellow
+        {0.91, 0.47, 0.82, 1.0}, // pink
+        {0.59, 0.47, 0.91, 1.0}, // purple
+        {0.47, 0.91, 0.91, 1.0}, // blue
+        {0.57, 0.91, 0.47, 1.0}, // green
         {1.0, 1.0, 1.0, 1.0}, // white
+    };
+
+    colourVectorU32 = {
+        {247, 245, 108, 255}, // yellow
+        {233, 120, 210, 255}, // pink
+        {150, 120, 233, 255}, // purple
+        {120, 233, 232, 255}, // blue
+        {146, 233, 120, 255}, // green
     };
 
     for(int i = 0; i < fontList.size(); i++){
@@ -103,6 +109,10 @@ std::string ChatApplication::GetCurrentTime(bool forUser){
 
 void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
+    if(!connectedToServer){
+        return;
+    }
+
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0)); // Remove spacing between items
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0); // Remove padding inside the button
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10,10));
@@ -155,9 +165,12 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
         ImVec2 text1_pos = ImVec2(30 + button_pos.x, (button_size.y - text1_size.y) * 0.5f + button_pos.y - 5);
 
         if(i == selectedUser){
-            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_ACCENT_COLOUR_DARK_U32);
-            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_ACCENT_COLOUR_U32, 0.0f, 0); // Border
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, GLOBAL_ACCENT_COLOUR_U32, currentClient.GetActiveUsers()[i].username.c_str());
+            int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].username);
+            ImVec4 currentColour = colourVectorU32[currentColourIndex];
+            
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
+            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[i].username.c_str());
 
         }
         else if(hovered){
@@ -183,9 +196,99 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
 }
 
+void ChatApplication::DrawConnectToServerModal(){
+
+    static char serverAddressBuffer[256] = "";
+    static char serverPortBuffer[256] = "";
+    static bool addressInput = false;
+    static bool portInput = false;
+    static bool focusOnPort = false;
+    static bool showWarning = false;
+
+
+    ImVec2 modalSize = ImVec2(400,200);
+
+    // Set size of the modal
+    ImGui::SetNextWindowSize(modalSize, ImGuiCond_Always);
+
+    // Center the modal on the screen
+    ImVec2 windowPos = ImVec2((ImGui::GetIO().DisplaySize.x - modalSize.x) * 0.5f,
+                              (ImGui::GetIO().DisplaySize.y - modalSize.y) * 0.5f);
+
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
+
+    if(ImGui::BeginPopupModal("Select Server", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)){
+        
+        ImGui::Text("Address");
+        if(ImGui::InputText("##Address", serverAddressBuffer, IM_ARRAYSIZE(serverAddressBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+
+            addressInput = strlen(serverAddressBuffer) > 0;
+
+            if(addressInput){
+                focusOnPort = true;
+                showWarning = false;
+            } else {
+                ImGui::SetKeyboardFocusHere(-1);
+            }
+        }
+
+        if(focusOnPort){
+            ImGui::SetKeyboardFocusHere();
+            focusOnPort = false;
+        }
+
+        ImGui::Text("Port");
+        if(ImGui::InputText("##Port", serverPortBuffer, IM_ARRAYSIZE(serverPortBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+ 
+            portInput = strlen(serverPortBuffer) > 0;
+            addressInput = strlen(serverAddressBuffer) > 0;
+
+            if(portInput && addressInput){
+                std::string address(serverAddressBuffer);
+                std::string port(serverPortBuffer);
+                std::string finalAddress = address + ":" + port;
+
+                ImGui::CloseCurrentPopup();
+                socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+                connectedToServer = true;
+            } else {
+                showWarning = true;
+                ImGui::SetKeyboardFocusHere(-1);
+            }
+        }
+
+        ImGui::Spacing();
+        
+        addressInput = strlen(serverAddressBuffer) > 0;
+        portInput = strlen(serverPortBuffer) > 0;
+
+        if(ImGui::Button("Connect") && addressInput && portInput){
+            std::string address(serverAddressBuffer);
+            std::string port(serverPortBuffer);
+            std::string finalAddress = address + ":" + port;
+
+            ImGui::CloseCurrentPopup();
+            socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+            connectedToServer = true;
+        }
+
+        if(showWarning){
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Please enter a valid Address and Port.");
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 
 
 void ChatApplication::Update(){
+
+
+    if(!connectedToServer){
+        ImGui::OpenPopup("Select Server");
+    }
 
     static char inputBuffer[256] = "";  // Buffer to hold the input text
     static bool scroll = true;
@@ -254,8 +357,6 @@ void ChatApplication::Update(){
         scroll = false;
     }
 
-    
-
     ImGui::EndChild(); // End the scrollable area
     ImGui::PopStyleVar(3);
     ImGui::PopStyleVar(1);
@@ -284,11 +385,16 @@ void ChatApplication::Update(){
     } 
 
     ImGui::End();
+
+    DrawConnectToServerModal();
+
 }
 
 void ChatApplication::End() {
-    socket.End();
-    socketThread.join();
+    if(connectedToServer){
+        socket.End();
+        socketThread.join();
+    }
 }
 
 
