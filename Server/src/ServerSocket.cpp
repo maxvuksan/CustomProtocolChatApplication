@@ -1,11 +1,11 @@
 #include "ServerSocket.h"
 
-#include <json.hpp> // TEMP DELETE
-using Json = nlohmann::json; // TEMP DELETE
+using Json = nlohmann::json; 
+
 
 using namespace std;
 
-void OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr payload) {
+void ServerSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr payload) {
     cout << "Recieved a message!" << endl;
 }
 
@@ -21,7 +21,7 @@ ServerSocket::ServerSocket() {
 
     client.init_asio();
 
-    client.set_message_handler(&OnMessage);
+    client.set_message_handler(bind(&ServerSocket::OnMessage, this, placeholders::_1, placeholders::_2));
     client.set_open_handler(bind(&ServerSocket::OnOpen, this, placeholders::_1));
 }
 
@@ -51,7 +51,12 @@ void ServerSocket::SendPayload() {
 
     jsonMessage["type"] = "data";
     jsonMessage["data"]["type"] = "hello";
-    jsonMessage["public_key"] = "1";
+    jsonMessage["data"]["public_key"] = to_string(rand() % 100);
 
     client.send(connection, to_string(jsonMessage), websocketpp::frame::opcode::text);
+}
+
+void ServerSocket::SendJson(Json json) {
+    client.send(connection, to_string(json), websocketpp::frame::opcode::text);
+
 }

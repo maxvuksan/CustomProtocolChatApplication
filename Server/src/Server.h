@@ -7,6 +7,7 @@
 #include "ServerSocket.h"
 #include "ServerHost.h"
 
+
 class Server {
 
     public:
@@ -21,13 +22,6 @@ class Server {
         ServerHost serverHost;
         std::thread hostThread;
 
-
         std::list<ServerSocket> socketList;
         std::list<std::thread> threadList;
-        
-        ServerSocket serverSocket1;
-        std::thread socketThread1;  
-
-        ServerSocket serverSocket2;
-        std::thread socketThread2;       
 };
