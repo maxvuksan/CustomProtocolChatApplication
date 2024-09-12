@@ -13,6 +13,13 @@
 #include "ClientSocket.h"
 #include <thread>
 
+enum ConnectedState{
+    
+    CS_DISCONNECTED,
+    CS_IN_PROGRESS,
+    CS_CONNECTED,
+};
+
 class ChatApplication : public Program{
 
     public:
@@ -29,21 +36,21 @@ class ChatApplication : public Program{
         */
         void Configure_FontList();
 
-        std::string GetCurrentTime(bool forUser);
-
+        std::string GetCurrentDateTime(bool forUser);
 
         void PushFont(Font fontIndex, ImVec4 colour = ImVec4(0.0,0.0,0.0,0.0));
         void PopFont();
 
-
+        void SetConnectedState(ConnectedState state){this->connectedState = state;}
 
     private:
-        
+
         Client currentClient;
 
         std::vector<FontData> fontList;
 
-        bool connectedToServer = false;
+        ConnectedState connectedState;
+        std::string serverAddressToJoin;
 
         std::vector<ImVec4> colourVector;
         std::vector<ImVec4> colourVectorU32;

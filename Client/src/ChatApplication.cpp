@@ -8,6 +8,8 @@ void ChatApplication::Start(){
 
     Configure_FontList();
     selectedUser = 0;
+
+    socket.SetChatApplication(this);
 }
 
 void ChatApplication::Configure_FontList(){
@@ -86,7 +88,7 @@ void ChatApplication::PopFont(){
     ImGui::PopStyleColor(1);
 }
 
-std::string ChatApplication::GetCurrentTime(bool forUser){
+std::string ChatApplication::GetCurrentDateTime(bool forUser){
     // Get current time
     time_t now = time(0);
     tm* localtm = localtime(&now);
@@ -109,7 +111,7 @@ std::string ChatApplication::GetCurrentTime(bool forUser){
 
 void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
-    if(!connectedToServer){
+    if(connectedState != CS_CONNECTED){
         return;
     }
 
@@ -219,63 +221,77 @@ void ChatApplication::DrawConnectToServerModal(){
 
     if(ImGui::BeginPopupModal("Select Server", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)){
         
-        ImGui::Text("Address");
-        if(ImGui::InputText("##Address", serverAddressBuffer, IM_ARRAYSIZE(serverAddressBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
 
-            addressInput = strlen(serverAddressBuffer) > 0;
+        // we are yet to connect
+        if(connectedState != CS_IN_PROGRESS){
 
-            if(addressInput){
-                focusOnPort = true;
-                showWarning = false;
-            } else {
-                ImGui::SetKeyboardFocusHere(-1);
+            // connection modal content
+            
+            ImGui::Text("Address");
+            if(ImGui::InputText("##Address", serverAddressBuffer, IM_ARRAYSIZE(serverAddressBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+
+                addressInput = strlen(serverAddressBuffer) > 0;
+
+                if(addressInput){
+                    focusOnPort = true;
+                    showWarning = false;
+                } else {
+                    ImGui::SetKeyboardFocusHere(-1);
+                }
             }
-        }
 
-        if(focusOnPort){
-            ImGui::SetKeyboardFocusHere();
-            focusOnPort = false;
-        }
+            if(focusOnPort){
+                ImGui::SetKeyboardFocusHere();
+                focusOnPort = false;
+            }
 
-        ImGui::Text("Port");
-        if(ImGui::InputText("##Port", serverPortBuffer, IM_ARRAYSIZE(serverPortBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
- 
-            portInput = strlen(serverPortBuffer) > 0;
+            ImGui::Text("Port");
+            if(ImGui::InputText("##Port", serverPortBuffer, IM_ARRAYSIZE(serverPortBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+    
+                portInput = strlen(serverPortBuffer) > 0;
+                addressInput = strlen(serverAddressBuffer) > 0;
+
+                if(portInput && addressInput){
+                    std::string address(serverAddressBuffer);
+                    std::string port(serverPortBuffer);
+                    std::string finalAddress = address + ":" + port;
+
+
+                    serverAddressToJoin = finalAddress;
+
+                    ImGui::CloseCurrentPopup();
+                    socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+
+                } else {
+                    showWarning = true;
+                    ImGui::SetKeyboardFocusHere(-1);
+                }
+            }
+
+            ImGui::Spacing();
+            
             addressInput = strlen(serverAddressBuffer) > 0;
+            portInput = strlen(serverPortBuffer) > 0;
 
-            if(portInput && addressInput){
+            if(ImGui::Button("Connect") && addressInput && portInput){
                 std::string address(serverAddressBuffer);
                 std::string port(serverPortBuffer);
                 std::string finalAddress = address + ":" + port;
 
                 ImGui::CloseCurrentPopup();
                 socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
-                connectedToServer = true;
-            } else {
-                showWarning = true;
-                ImGui::SetKeyboardFocusHere(-1);
+            }
+
+            if(showWarning){
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Please enter a valid Address and Port.");
             }
         }
-
-        ImGui::Spacing();
-        
-        addressInput = strlen(serverAddressBuffer) > 0;
-        portInput = strlen(serverPortBuffer) > 0;
-
-        if(ImGui::Button("Connect") && addressInput && portInput){
-            std::string address(serverAddressBuffer);
-            std::string port(serverPortBuffer);
-            std::string finalAddress = address + ":" + port;
-
-            ImGui::CloseCurrentPopup();
-            socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
-            connectedToServer = true;
+        else{
+            std::string connectingText = "Connecting to " + serverAddressToJoin + "...";
+            ImGui::Text(connectingText.c_str());
         }
 
-        if(showWarning){
-            ImGui::Spacing();
-            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Please enter a valid Address and Port.");
-        }
 
         ImGui::EndPopup();
     }
@@ -286,7 +302,7 @@ void ChatApplication::DrawConnectToServerModal(){
 void ChatApplication::Update(){
 
 
-    if(!connectedToServer){
+    if(!connectedState == CS_DISCONNECTED){
         ImGui::OpenPopup("Select Server");
     }
 
@@ -372,9 +388,9 @@ void ChatApplication::Update(){
         std::string newMessage(inputBuffer);
         if (!newMessage.empty()) {
             // Add the new message to the selected user's message list (pseudo-code)
-            currentClient.PushMessage({newMessage, "me", GetCurrentTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
+            currentClient.PushMessage({newMessage, "me", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
 
-            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentTime(true), currentClient.GetActiveUsers()[selectedUser].username);
+            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 
             // Clear the input buffer
             inputBuffer[0] = '\0';
@@ -391,7 +407,7 @@ void ChatApplication::Update(){
 }
 
 void ChatApplication::End() {
-    if(connectedToServer){
+    if(connectedState == CS_CONNECTED){
         socket.End();
         socketThread.join();
     }
