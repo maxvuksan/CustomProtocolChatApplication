@@ -5,33 +5,33 @@ using namespace std;
 using Json = nlohmann::json;
 
 // Define a callback for handling messages
-void on_message(server_type* s, websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
-    // s->send(hdl, msg->get_payload(), msg->get_opcode());
-
+void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
     Json json = Json::parse(msg->get_payload());
+    string type = json["data"]["type"];
 
-    cout << json << endl;
+    if (type == "hello") {
+        string publicKey = json["data"]["public_key"];
+        AddClient(publicKey);
+    }
+
+    if (type == "client_update") {
+        cout << "client update foo" << endl;
+    }
 }
 
-void OnOpen(websocketpp::connection_hdl hdl) {
-    cout << "Someone connected to server!" << endl;
-}
-
-void ServerHost::StartServer(int port) {
+void ServerHost::StartServer(int port, list<ServerSocket> * socketList) {
     try {
         // Create a server endpoint
         server_type server;
+
+        serverSockets = socketList;
 
         // Set logging settings (optional)
         server.set_access_channels(websocketpp::log::alevel::all);
         server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
-        // Set the message handler
-        server.set_message_handler([&server](websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
-            on_message(&server, hdl, msg);
-        });
+        server.set_message_handler(bind(&ServerHost::OnMessage, this, placeholders::_1, placeholders::_2));
 
-        server.set_open_handler(&OnOpen);
 
         // Set the listening port
         server.init_asio();
@@ -49,4 +49,22 @@ void ServerHost::StartServer(int port) {
     }
 
     return;
+}
+
+void ServerHost::AddClient(string publicKey) {
+    clientList.emplace_back(publicKey);
+
+    SendClientUpdate();
+}
+
+void ServerHost::SendClientUpdate() {
+
+    Json jsonMessage;
+
+    jsonMessage["type"] = "data";
+    jsonMessage["data"]["type"] = "client_update";
+
+    for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); ++it) {
+        it->SendJson(jsonMessage);
+    }
 }

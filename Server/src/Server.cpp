@@ -9,7 +9,7 @@ int Server::StartServer() {
     cin >> port;
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
-    hostThread = thread(&ServerHost::StartServer, &serverHost, port);
+    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList);
 
     while (1) {
         string command;
