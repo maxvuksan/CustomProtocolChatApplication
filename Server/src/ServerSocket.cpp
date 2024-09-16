@@ -6,12 +6,7 @@ using Json = nlohmann::json;
 using namespace std;
 
 void ServerSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr payload) {
-    cout << "Recieved a message!" << endl;
 
-    Json json = Json::parse(payload->get_payload());
-    string type = json["data"]["type"];
-    
-    cout << type << endl;
 }
 
 void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
@@ -19,6 +14,7 @@ void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
     Json jsonMessage;
 
+    jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "server_hello";
     jsonMessage["data"]["sender"] = address;
 

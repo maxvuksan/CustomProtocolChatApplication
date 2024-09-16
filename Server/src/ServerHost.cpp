@@ -7,7 +7,23 @@ using Json = nlohmann::json;
 // Define a callback for handling messages
 void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message_ptr msg) {
     Json json = Json::parse(msg->get_payload());
-    string type = json["data"]["type"];
+    string type = json["type"];
+
+    // Unsigned data
+    if (type == "client_update") {
+        UpdateExternalClientList(hdl, json["clients"]);
+    }
+
+    if (type == "client_list_request") {
+        
+    }
+
+    // Signed data
+    if (type != "signed_data") {
+        return;
+    }
+
+    type = json["data"]["type"];
 
     if (type == "hello") {
         string publicKey = json["data"]["public_key"];
@@ -15,11 +31,42 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "server_hello") {
-        cout << json["data"]["sender"] << endl;
+        AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
-    if (type == "client_update") {
-        cout << json["data"]["clients"] << endl;
+
+}
+
+void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
+    Json jsonMessage;
+
+    jsonMessage["type"] = "client_list";
+    
+}
+
+void ServerHost::AddNewExternalClientList(websocketpp::connection_hdl connection, string address) {
+
+    ClientList externalClientListElement;
+    externalClientListElement.connection = connection;
+    externalClientListElement.address = address;
+
+    externalClientLists.push_back(externalClientListElement);
+};
+
+
+void ServerHost::UpdateExternalClientList(websocketpp::connection_hdl connection, Json jsonArray) {
+
+    for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
+        // checking if hdl matches
+        if (connection.owner_before(it->connection) || it->connection.owner_before(connection)) {
+            continue;
+        }
+
+        // Overriding client list with jsonArray
+        it->clientList.clear();
+        for (auto& x : jsonArray.items()) {
+            it->clientList.push_back(x.value());
+        }
     }
 }
 
@@ -65,9 +112,12 @@ void ServerHost::SendClientUpdate() {
 
     Json jsonMessage;
 
-    jsonMessage["type"] = "data";
-    jsonMessage["data"]["type"] = "client_update";
-    jsonMessage["data"]["clients"] = Json::array({1, 2, 3, 4});
+    jsonMessage["type"] = "client_update";
+    jsonMessage["clients"] = {};
+
+    for (list<string>::iterator it = clientList.begin(); it != clientList.end(); it++) {
+        jsonMessage["clients"].push_back(*it);
+    }
 
     for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); ++it) {
         it->SendJson(jsonMessage);
