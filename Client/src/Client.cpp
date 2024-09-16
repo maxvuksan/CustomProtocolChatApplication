@@ -20,7 +20,6 @@ Client::Client(){
 
     };
 
-
     allMessages["lexi"].push_back(ChatMessage({"Hey guys how is everyone", "lexi", "22/08/2024 1:32 PM"}));
     allMessages["ash"].push_back(ChatMessage({"Hello my name is ashlan", "ash", "22/08/2024 1:32 PM"}));
     allMessages["max"].push_back(ChatMessage({"cat cat cat cat cat cat cat cat", "max", "22/08/2024 1:32 PM"}));

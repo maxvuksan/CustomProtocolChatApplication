@@ -5,12 +5,10 @@
 #include <vector> 
 #include <unordered_map>
 
+#include <cryptopp/aes.h>
 
 class Client {
 
-    
-
-    public:
         Client();
         const std::unordered_map<std::string, std::vector<ChatMessage>>& GetAllMessages();
         const std::vector<ChatMessage>& GetUserMessages(std::string users); 
