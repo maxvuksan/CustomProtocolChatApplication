@@ -1,5 +1,6 @@
 #include "Client.h"
 #include <algorithm>
+#include "ChatApplication.h"
 
 Client::Client(){
     allMessages.clear();
@@ -47,6 +48,11 @@ const ChatMessage& Client::GetChatMessage(std::string currentUser, int index){
     return allMessages[currentUser][index];
 }
 
+void Client::PushActiveUser(std::string username)
+{   
+    this->activeUsers.push_back(ActiveUsers({username, "0", ChatApplication::GetRandomColourIndex()}));
+}
+
 int Client::GetColourIndex(std::string user){
 
     for(int i = 0; i < activeUsers.size(); i++){
@@ -56,7 +62,7 @@ int Client::GetColourIndex(std::string user){
 
     }
 
-    return 5;
+    return 0;
 }
 
 const std::vector<ChatMessage>& Client::GetUserMessages(std::string users){

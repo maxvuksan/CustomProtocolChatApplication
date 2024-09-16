@@ -10,12 +10,15 @@
 class Client {
 
     public:
-    
+
         Client();
         const std::unordered_map<std::string, std::vector<ChatMessage>>& GetAllMessages();
         const std::vector<ChatMessage>& GetUserMessages(std::string users); 
         const std::vector<ActiveUsers>& GetActiveUsers();
         const ChatMessage& GetChatMessage(std::string user, int index);
+
+        void ClearActiveUsers(){activeUsers.clear();}
+        void PushActiveUser(std::string username);
 
         void UserLeave(std::string user);
         void UserJoin(std::string user);
@@ -25,7 +28,6 @@ class Client {
 
     private:
         void ParseMessage(std::string currentUser, ChatMessage currentMessage);
-        
 
         auto compareByDate(const ActiveUsers& a, const ActiveUsers& b);
 

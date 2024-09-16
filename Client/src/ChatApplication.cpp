@@ -3,6 +3,24 @@
 #include "Globals.h"
 
 
+std::vector<ImVec4> ChatApplication::colourVector = {
+    {0.97, 0.96, 0.42, 1.0}, // yellow
+    {0.91, 0.47, 0.82, 1.0}, // pink
+    {0.59, 0.47, 0.91, 1.0}, // purple
+    {0.47, 0.91, 0.91, 1.0}, // blue
+    {0.57, 0.91, 0.47, 1.0}, // green
+    {1.0, 1.0, 1.0, 1.0}, // white
+};
+
+std::vector<ImVec4> ChatApplication::colourVectorU32 = {
+    {247, 245, 108, 255}, // yellow
+    {233, 120, 210, 255}, // pink
+    {150, 120, 233, 255}, // purple
+    {120, 233, 232, 255}, // blue
+    {146, 233, 120, 255}, // green
+};
+
+
 void ChatApplication::Start(){
     // Creating thread for client socket
 
@@ -11,6 +29,7 @@ void ChatApplication::Start(){
     connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
+    socket.SetClient(&currentClient);
 }
 
 void ChatApplication::Configure_FontList(){
@@ -40,22 +59,6 @@ void ChatApplication::Configure_FontList(){
 
     ImGuiIO& io = ImGui::GetIO();
 
-    colourVector = {
-        {0.97, 0.96, 0.42, 1.0}, // yellow
-        {0.91, 0.47, 0.82, 1.0}, // pink
-        {0.59, 0.47, 0.91, 1.0}, // purple
-        {0.47, 0.91, 0.91, 1.0}, // blue
-        {0.57, 0.91, 0.47, 1.0}, // green
-        {1.0, 1.0, 1.0, 1.0}, // white
-    };
-
-    colourVectorU32 = {
-        {247, 245, 108, 255}, // yellow
-        {233, 120, 210, 255}, // pink
-        {150, 120, 233, 255}, // purple
-        {120, 233, 232, 255}, // blue
-        {146, 233, 120, 255}, // green
-    };
 
     for(int i = 0; i < fontList.size(); i++){
 
@@ -104,7 +107,6 @@ std::string ChatApplication::GetCurrentDateTime(bool forUser){
     } else {
         oss << std::put_time(localtm, "%d/%m/%y %I:%M %p");
     }
-    
     
     return oss.str();
 }

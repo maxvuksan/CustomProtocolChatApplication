@@ -8,7 +8,9 @@
 
 typedef websocketpp::client<websocketpp::config::asio_client> AsioClient;
 
+class Client;
 class ChatApplication;
+
 class ClientSocket {
     public:
         void Start(std::string finalAddress);
@@ -18,6 +20,7 @@ class ClientSocket {
 
         // allow the client socket to talk to the UI 
         void SetChatApplication(ChatApplication* ref){this->chatApplication = ref;}
+        void SetClient(Client* client){this->client = client;}
 
         void OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr msg);
         void ParseMessage(const std::string& data);
@@ -28,9 +31,10 @@ class ClientSocket {
     private:
 
 
+        Client* client;
         ChatApplication* chatApplication;
         
         websocketpp::connection_hdl global_hdl;
-        AsioClient c;
+        AsioClient asioClient;
 
 };

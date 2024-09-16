@@ -11,14 +11,40 @@ using Json = nlohmann::json;
 /// Handlers
 void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr msg) {
     std::cout << "Received message: " << msg->get_payload() << std::endl;
+    ParseMessage(msg->get_payload());
 }
 
 void ClientSocket::ParseMessage(const std::string& data){
 
+    Json json = Json::parse(data);
+    
+    string topmostType = json["type"];
 
 
+    if(topmostType == "signed_data"){
+
+        // handle data messages
+
+    }
+    if(topmostType == "client_list"){  
+
+        // TEMP : Clears the whole list of clients, should instead determine which clients should be updated and only update those
+
+        client->ClearActiveUsers();
+
+        int serverI = 0;
+        for(auto serverInput : json["servers"]){
+            
+            for(auto clientInput : json["servers"][serverI]["clients"]){
+
+                client->PushActiveUser(clientInput);
+
+            }
+            serverI++;
+        }
 
 
+    }
 
 }
 
@@ -37,18 +63,21 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     // Example: Send a message to the server right after the connection opens
     websocketpp::lib::error_code ec;
     
-    //c.send(hdl, message, websocketpp::frame::opcode::text, ec);
 
-    // Creating json
-    Json jsonMessage;
+    // Creating json 
+    Json helloMessage;
 
-    jsonMessage["type"] = "signed_data";
-    jsonMessage["data"]["type"] = "hello";
-    jsonMessage["data"]["public_key"] = "0123"; // TEMP
+    helloMessage["type"] = "data";
+    helloMessage["data"]["type"] = "hello";
+    helloMessage["data"]["public_key"] = "0123"; // TEMP
 
-    c.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    asioClient.send(global_hdl, to_string(helloMessage), websocketpp::frame::opcode::text);
 
+    // ask for client list 
+    Json clientListMessage; 
+    clientListMessage["type"] = "client_list_request";
 
+    asioClient.send(global_hdl, to_string(clientListMessage), websocketpp::frame::opcode::text);
 
     chatApplication->SetConnectedState(CS_CONNECTED);
 }
@@ -60,19 +89,19 @@ void ClientSocket::Start(std::string finalAddress) {
         chatApplication->SetConnectedState(CS_IN_PROGRESS);
 
         // Set logging to be pretty verbose (everything except message payloads)
-        c.set_access_channels(websocketpp::log::alevel::all);
-        c.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        asioClient.set_access_channels(websocketpp::log::alevel::all);
+        asioClient.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
         // Initialize the Asio transport policy
-        c.init_asio();
+        asioClient.init_asio();
 
-        c.set_message_handler(bind(&ClientSocket::OnMessage, this, placeholders::_1, placeholders::_2));
-        c.set_open_handler(bind(&ClientSocket::OnOpen, this, placeholders::_1));
-        c.set_close_handler(bind(&ClientSocket::OnClose, this, placeholders::_1));
+        asioClient.set_message_handler(bind(&ClientSocket::OnMessage, this, placeholders::_1, placeholders::_2));
+        asioClient.set_open_handler(bind(&ClientSocket::OnOpen, this, placeholders::_1));
+        asioClient.set_close_handler(bind(&ClientSocket::OnClose, this, placeholders::_1));
 
         // Create a connection to the server
         websocketpp::lib::error_code ec;
-        AsioClient::connection_ptr con = c.get_connection("ws://" + finalAddress, ec); // NOT ENCRYPTED
+        AsioClient::connection_ptr con = asioClient.get_connection("ws://" + finalAddress, ec); // NOT ENCRYPTED
 
         if (ec) {
             std::cout << "Could not create connection: " << ec.message() << std::endl;
@@ -80,10 +109,10 @@ void ClientSocket::Start(std::string finalAddress) {
         }
 
         // Connect the connection
-        c.connect(con);
+        asioClient.connect(con);
 
         // Start the ASIO io_service run loop
-        c.run();
+        asioClient.run();
 
 
 
@@ -96,7 +125,7 @@ void ClientSocket::Start(std::string finalAddress) {
 
 
 void ClientSocket::End() {
-    c.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");
+    asioClient.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");
 }
 
 int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
@@ -112,7 +141,7 @@ int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
     // Chat part
     jsonMessage["data"]["chat"] = chatMessage.message;
 
-    c.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
     return 0;
 }
