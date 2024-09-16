@@ -3,7 +3,7 @@
 #include "Globals.h"
 
 
-ChatApplication::colourVector = {
+std::vector<ImVec4> ChatApplication::colourVector = {
     {0.97, 0.96, 0.42, 1.0}, // yellow
     {0.91, 0.47, 0.82, 1.0}, // pink
     {0.59, 0.47, 0.91, 1.0}, // purple
@@ -12,7 +12,7 @@ ChatApplication::colourVector = {
     {1.0, 1.0, 1.0, 1.0}, // white
 };
 
-ChatApplication::colourVectorU32 = {
+std::vector<ImVec4> ChatApplication::colourVectorU32 = {
     {247, 245, 108, 255}, // yellow
     {233, 120, 210, 255}, // pink
     {150, 120, 233, 255}, // purple
@@ -29,6 +29,7 @@ void ChatApplication::Start(){
     connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
+    socket.SetClient(&currentClient);
 }
 
 void ChatApplication::Configure_FontList(){

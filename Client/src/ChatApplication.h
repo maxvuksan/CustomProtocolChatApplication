@@ -46,7 +46,7 @@ class ChatApplication : public Program{
         /*
             @returns the index of a random colour
         */
-        static int GetRandomColourIndex(){return}
+        static int GetRandomColourIndex(){return rand() % colourVector.size();}
 
     private:
 

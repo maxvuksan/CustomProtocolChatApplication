@@ -33,13 +33,13 @@ void ClientSocket::ParseMessage(const std::string& data){
         client->ClearActiveUsers();
 
         int serverI = 0;
-        for(auto server : json["servers"]){
+        for(auto serverInput : json["servers"]){
             
-            for(auto client : json["servers"][serverI]["clients"]{
+            for(auto clientInput : json["servers"][serverI]["clients"]){
 
-                client->AppendActiveUser(client);
+                client->PushActiveUser(clientInput);
 
-            })
+            }
             serverI++;
         }
 
@@ -67,17 +67,17 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     // Creating json 
     Json helloMessage;
 
-    jsonMessage["type"] = "data";
-    jsonMessage["data"]["type"] = "hello";
-    jsonMessage["data"]["public_key"] = "0123"; // TEMP
+    helloMessage["type"] = "data";
+    helloMessage["data"]["type"] = "hello";
+    helloMessage["data"]["public_key"] = "0123"; // TEMP
 
     asioClient.send(global_hdl, to_string(helloMessage), websocketpp::frame::opcode::text);
 
     // ask for client list 
     Json clientListMessage; 
-    jsonMessage["type"] = "client_list_request";
+    clientListMessage["type"] = "client_list_request";
 
-    asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    asioClient.send(global_hdl, to_string(clientListMessage), websocketpp::frame::opcode::text);
 
     chatApplication->SetConnectedState(CS_CONNECTED);
 }
@@ -141,7 +141,7 @@ int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
     // Chat part
     jsonMessage["data"]["chat"] = chatMessage.message;
 
-    c.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
     return 0;
 }
