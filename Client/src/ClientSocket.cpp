@@ -16,6 +16,8 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
 
 void ClientSocket::ParseMessage(const std::string& data){
 
+    std::cout << data << "\n";
+
     Json json = Json::parse(data);
     
     string topmostType = json["type"];
@@ -42,8 +44,6 @@ void ClientSocket::ParseMessage(const std::string& data){
             }
             serverI++;
         }
-
-
     }
 
 }
@@ -56,9 +56,12 @@ void ClientSocket::OnClose(websocketpp::connection_hdl hdl) {
 }
 
 void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
+
     global_hdl = hdl;
 
     std::cout << "Connection opened!" << std::endl;
+
+    this->counter = 0;
 
     // Example: Send a message to the server right after the connection opens
     websocketpp::lib::error_code ec;
@@ -70,6 +73,8 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     helloMessage["type"] = "signed_data";
     helloMessage["data"]["type"] = "hello";
     helloMessage["data"]["public_key"] = "0123"; // TEMP
+    helloMessage["counter"] = counter;
+    counter++;
 
     asioClient.send(global_hdl, to_string(helloMessage), websocketpp::frame::opcode::text);
 
@@ -135,7 +140,7 @@ int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
 
     jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "chat";
-    jsonMessage["counter"] = "NEED TO DO"; // TEMP
+    jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
 
     // Chat part
