@@ -42,7 +42,7 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     // Creating json
     Json jsonMessage;
 
-    jsonMessage["type"] = "data";
+    jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "hello";
     jsonMessage["data"]["public_key"] = "0123"; // TEMP
 

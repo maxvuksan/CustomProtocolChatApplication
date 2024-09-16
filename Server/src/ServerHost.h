@@ -12,6 +12,12 @@
 
 typedef websocketpp::server<websocketpp::config::asio> server_type;
 
+struct ClientList {
+    std::string address;
+    websocketpp::connection_hdl connection;
+    std::list<std::string> clientList;
+};
+
 class ServerHost {
 
     public:
@@ -25,6 +31,13 @@ class ServerHost {
         void AddClient(std::string);
         void SendClientUpdate();
 
+        void AddNewExternalClientList(websocketpp::connection_hdl, std::string);
+        void UpdateExternalClientList(websocketpp::connection_hdl, nlohmann::json);
+        void SendAllClientLists(websocketpp::connection_hdl);
+
         std::list<std::string> clientList;
         std::list<ServerSocket> * serverSockets;
+
+        std::list<ClientList> externalClientLists;
 };
+
