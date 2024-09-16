@@ -15,7 +15,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "client_list_request") {
-        
+        SendAllClientLists(hdl);
     }
 
     // Signed data
@@ -50,6 +50,8 @@ void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
         myServer["clients"].push_back(*it);
     }
 
+    jsonMessage["servers"].push_back(myServer);
+
     for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
         Json server;
         server["address"] = it->address;
@@ -61,6 +63,8 @@ void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
 
         jsonMessage["servers"].push_back(server);
     }
+
+    server.send(connection, to_string(jsonMessage), websocketpp::frame::opcode::text);
     
 }
 
@@ -94,8 +98,6 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string a
     try {
 
         // Create a server endpoint
-        server_type server;
-
         serverSockets = socketList;
 
         // Set logging settings (optional)

@@ -41,5 +41,7 @@ class ServerHost {
         std::list<ClientList> externalClientLists;
 
         std::string myAddress;
+
+        server_type server;
 };
 
