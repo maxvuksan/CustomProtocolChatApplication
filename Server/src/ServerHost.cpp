@@ -19,7 +19,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "client_update") {
-        cout << "client update foo" << endl;
+        cout << json["data"]["clients"] << endl;
     }
 }
 
@@ -67,7 +67,7 @@ void ServerHost::SendClientUpdate() {
 
     jsonMessage["type"] = "data";
     jsonMessage["data"]["type"] = "client_update";
-    // jsonMessage["data"]["clients"]
+    jsonMessage["data"]["clients"] = Json::array({1, 2, 3, 4});
 
     for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); ++it) {
         it->SendJson(jsonMessage);

@@ -8,6 +8,7 @@ void ChatApplication::Start(){
 
     Configure_FontList();
     selectedUser = 0;
+    connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
 }
@@ -308,7 +309,7 @@ void ChatApplication::DrawConnectToServerModal(){
 void ChatApplication::Update(){
 
 
-    if(!connectedState == CS_DISCONNECTED){
+    if(connectedState == CS_DISCONNECTED){
         ImGui::OpenPopup("Select Server");
     }
 
