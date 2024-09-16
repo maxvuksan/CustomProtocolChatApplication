@@ -7,12 +7,22 @@ using namespace std;
 
 void ServerSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr payload) {
     cout << "Recieved a message!" << endl;
+
+    Json json = Json::parse(payload->get_payload());
+    string type = json["data"]["type"];
+    
+    cout << type << endl;
 }
 
 void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
     connection = hdl;
-    cout << "Connection Opened" << endl;
-    SendPayload();
+
+    Json jsonMessage;
+
+    jsonMessage["data"]["type"] = "server_hello";
+    jsonMessage["data"]["sender"] = address;
+
+    SendJson(jsonMessage);
 }
 
 ServerSocket::ServerSocket() {
@@ -25,12 +35,15 @@ ServerSocket::ServerSocket() {
     client.set_open_handler(bind(&ServerSocket::OnOpen, this, placeholders::_1));
 }
 
-void ServerSocket::ConnectToServer(string ip) {
+void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
+
+    address = srcAddress;
+
     websocketpp::lib::error_code ec; 
     
-    cout << "Attempting to connect to server with ip: " << ip << endl;
+    cout << "Attempting to connect to server with ip: " << dstIp << endl;
 
-    string address = "ws://" + ip;
+    string address = "ws://" + dstIp;
     Client::connection_ptr con = client.get_connection(address, ec);
     
     if (ec) {
@@ -46,17 +59,16 @@ void ServerSocket::ConnectToServer(string ip) {
 
 /// TEMP MIMICING WHAT A CLIENT SENDS ON CONNECTION
 void ServerSocket::SendPayload() {
-    // Creating json
-    Json jsonMessage;
+    // // Creating json
+    // Json jsonMessage;
 
-    jsonMessage["type"] = "data";
-    jsonMessage["data"]["type"] = "hello";
-    jsonMessage["data"]["public_key"] = to_string(rand() % 100);
+    // jsonMessage["type"] = "data";
+    // jsonMessage["data"]["type"] = "hello";
+    // jsonMessage["data"]["public_key"] = to_string(rand() % 100);
 
-    client.send(connection, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    // client.send(connection, to_string(jsonMessage), websocketpp::frame::opcode::text);
 }
 
 void ServerSocket::SendJson(Json json) {
     client.send(connection, to_string(json), websocketpp::frame::opcode::text);
-
 }

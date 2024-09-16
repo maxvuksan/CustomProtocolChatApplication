@@ -4,9 +4,14 @@ using namespace std;
 
 int Server::StartServer() {
 
+    cout << "Enter server ip " << endl;
+    cin >> address; 
     int port;
     cout << "Enter server port " << endl;
     cin >> port;
+
+    address += ":" + to_string(port);
+
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList);
@@ -46,12 +51,12 @@ void Server::CommandManager(string command) {
     }
 }
 
-int Server::ConnectToServer(string ip) {
+int Server::ConnectToServer(string dstIp) {
     
     socketList.emplace_back();
 
     ServerSocket & lastSocket = socketList.back(); 
-    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), ip);
+    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), dstIp, address);
     
     return 0;
 }

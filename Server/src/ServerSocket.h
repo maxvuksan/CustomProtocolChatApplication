@@ -13,7 +13,7 @@ typedef websocketpp::client<websocketpp::config::asio_client> Client;
 
 class ServerSocket {
     public:
-        void ConnectToServer(std::string);
+        void ConnectToServer(std::string, std::string);
         void SendJson(nlohmann::json);
         
         ServerSocket();
@@ -25,8 +25,6 @@ class ServerSocket {
         void SendPayload();
         void OnOpen(websocketpp::connection_hdl);
         void OnMessage(websocketpp::connection_hdl, websocketpp::config::asio_client::message_type::ptr);
-        
-        
-        
 
+        std::string address;
 };

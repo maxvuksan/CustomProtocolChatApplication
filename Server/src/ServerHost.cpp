@@ -14,6 +14,10 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
         AddClient(publicKey);
     }
 
+    if (type == "server_hello") {
+        cout << json["data"]["sender"] << endl;
+    }
+
     if (type == "client_update") {
         cout << "client update foo" << endl;
     }
@@ -63,6 +67,7 @@ void ServerHost::SendClientUpdate() {
 
     jsonMessage["type"] = "data";
     jsonMessage["data"]["type"] = "client_update";
+    // jsonMessage["data"]["clients"]
 
     for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); ++it) {
         it->SendJson(jsonMessage);
