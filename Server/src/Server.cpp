@@ -14,7 +14,7 @@ int Server::StartServer() {
 
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
-    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList);
+    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
 
     while (1) {
         string command;

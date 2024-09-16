@@ -21,7 +21,7 @@ struct ClientList {
 class ServerHost {
 
     public:
-        void StartServer(int, std::list<ServerSocket> *);
+        void StartServer(int, std::list<ServerSocket> *, std::string);
         void Callback_OnMessage(websocketpp::connection_hdl connection_hdl, server_type::message_ptr message);
 
     private:
@@ -39,5 +39,7 @@ class ServerHost {
         std::list<ServerSocket> * serverSockets;
 
         std::list<ClientList> externalClientLists;
+
+        std::string myAddress;
 };
 

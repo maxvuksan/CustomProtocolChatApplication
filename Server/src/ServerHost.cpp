@@ -41,6 +41,26 @@ void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
     Json jsonMessage;
 
     jsonMessage["type"] = "client_list";
+    jsonMessage["servers"] = {};
+
+    Json myServer;
+    myServer["address"] = myAddress;
+    myServer["clients"] = {}; 
+    for (list<string>::iterator it = clientList.begin(); it != clientList.end(); it++) {
+        myServer["clients"].push_back(*it);
+    }
+
+    for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
+        Json server;
+        server["address"] = it->address;
+        server["clients"] = {};
+
+        for (list<string>::iterator il = it->clientList.begin(); il != it->clientList.end(); il++) {
+            server["clients"].push_back(*il);
+        }
+
+        jsonMessage["servers"].push_back(server);
+    }
     
 }
 
@@ -70,8 +90,9 @@ void ServerHost::UpdateExternalClientList(websocketpp::connection_hdl connection
     }
 }
 
-void ServerHost::StartServer(int port, list<ServerSocket> * socketList) {
+void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string address) {
     try {
+
         // Create a server endpoint
         server_type server;
 
@@ -90,6 +111,7 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList) {
         server.start_accept();
 
         cout << "Server started on port: " << port << endl; 
+        myAddress = address;
 
         // Start the ASIO io_service loop
         server.run();
