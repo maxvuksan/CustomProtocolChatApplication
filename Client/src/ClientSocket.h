@@ -34,6 +34,9 @@ class ClientSocket {
         Client* client;
         ChatApplication* chatApplication;
         
+        // should be reset everytime we begin a new connection
+        int counter = 0;
+        
         websocketpp::connection_hdl global_hdl;
         AsioClient asioClient;
 
