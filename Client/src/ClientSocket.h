@@ -19,8 +19,9 @@ class ClientSocket {
         // allow the client socket to talk to the UI 
         void SetChatApplication(ChatApplication* ref){this->chatApplication = ref;}
 
-
         void OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr msg);
+        void ParseMessage(const std::string& data);
+
         void OnClose(websocketpp::connection_hdl hdl);
         void OnOpen(websocketpp::connection_hdl hdl);
 

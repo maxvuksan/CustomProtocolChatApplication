@@ -13,6 +13,15 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
     std::cout << "Received message: " << msg->get_payload() << std::endl;
 }
 
+void ClientSocket::ParseMessage(const std::string& data){
+
+
+
+
+
+
+}
+
 // Define a close handler function
 void ClientSocket::OnClose(websocketpp::connection_hdl hdl) {
     std::cout << "Connection closed" << std::endl;
