@@ -43,6 +43,11 @@ class ChatApplication : public Program{
 
         void SetConnectedState(ConnectedState state){this->connectedState = state;}
 
+        /*
+            @returns the index of a random colour
+        */
+        static int GetRandomColourIndex(){return}
+
     private:
 
         Client currentClient;
@@ -52,8 +57,8 @@ class ChatApplication : public Program{
         ConnectedState connectedState;
         std::string serverAddressToJoin;
 
-        std::vector<ImVec4> colourVector;
-        std::vector<ImVec4> colourVectorU32;
+        static std::vector<ImVec4> colourVector;
+        static std::vector<ImVec4> colourVectorU32;
         
         int selectedUser;
 
