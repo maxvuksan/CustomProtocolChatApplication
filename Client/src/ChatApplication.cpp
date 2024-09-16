@@ -26,6 +26,7 @@ void ChatApplication::Start(){
 
     Configure_FontList();
     selectedUser = 0;
+    connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
 }
