@@ -54,6 +54,7 @@ void Server::CommandManager(string command) {
 int Server::ConnectToServer(string dstIp) {
     
     socketList.emplace_back();
+    addressList.push_back(dstIp);
 
     ServerSocket & lastSocket = socketList.back(); 
     threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), dstIp, address);

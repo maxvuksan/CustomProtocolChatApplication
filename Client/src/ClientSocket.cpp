@@ -133,7 +133,7 @@ void ClientSocket::End() {
     asioClient.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");
 }
 
-int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
+int ClientSocket::SendChatMessage(string chatMessage) {
 
     // Creating json
     Json jsonMessage;
@@ -143,8 +143,10 @@ int ClientSocket::SendChatMessage(ChatMessage chatMessage) {
     jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
 
+    jsonMessage["data"]["destination_servers"] = {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
+
     // Chat part
-    jsonMessage["data"]["chat"] = chatMessage.message;
+    jsonMessage["data"]["chat"] = chatMessage;
 
     asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 

@@ -24,6 +24,7 @@ class Server {
 
         std::list<ServerSocket> socketList;
         std::list<std::thread> threadList;
+        std::list<std::string> addressList;
 
         std::string address;
 };

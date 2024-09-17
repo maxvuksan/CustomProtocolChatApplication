@@ -395,9 +395,15 @@ void ChatApplication::Update(){
 
         // Process the input here, for example, send the message
         std::string newMessage(inputBuffer);
+        
         if (!newMessage.empty()) {
             // Add the new message to the selected user's message list (pseudo-code)
+
+            // Sending chat message to server
+            socket.SendChatMessage(newMessage);
+
             currentClient.PushMessage({newMessage, "me", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
+            
 
             selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 

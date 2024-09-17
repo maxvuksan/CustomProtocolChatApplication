@@ -27,14 +27,51 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
 
     if (type == "hello") {
         string publicKey = json["data"]["public_key"];
-        AddClient(publicKey);
+        AddClient(publicKey, hdl);
     }
 
     if (type == "server_hello") {
         AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
+    if (type == "chat") {
+        Json addresses = json["data"]["destination_servers"];
+        SendChatMessage(json, addresses);
+    }
 
+
+}
+
+void ServerHost::SendChatMessage(Json message, Json addresses) {
+     for (auto& x : addresses.items()) {
+        string address = x.value();
+
+        // Remove destination addresses from the message (Stops looping)
+        message["data"]["destination_servers"] = { address };
+        
+        if (address == myAddress) { // Send message to all clients
+            
+            for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
+                server.send(*it, to_string(message), websocketpp::frame::opcode::text);
+            }
+
+
+        } else {                    // Send message to destination servers
+
+            for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); it++) {
+
+                if (it->GetConnectionAddress() != address) {
+                    continue;
+                }
+
+                it->SendJson(message);
+            }
+
+        }
+
+     }
+
+     
 }
 
 void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
@@ -126,8 +163,9 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string a
     return;
 }
 
-void ServerHost::AddClient(string publicKey) {
+void ServerHost::AddClient(string publicKey, websocketpp::connection_hdl hdl) {
     clientList.emplace_back(publicKey);
+    clientConnections.push_back(hdl);
 
     SendClientUpdate();
 }

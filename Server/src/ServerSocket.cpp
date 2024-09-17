@@ -16,7 +16,7 @@ void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
     jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "server_hello";
-    jsonMessage["data"]["sender"] = address;
+    jsonMessage["data"]["sender"] = hostAddress;
 
     SendJson(jsonMessage);
 }
@@ -33,13 +33,15 @@ ServerSocket::ServerSocket() {
 
 void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
 
-    address = srcAddress;
+    hostAddress = srcAddress;
+    connectionAddress = dstIp;
 
     websocketpp::lib::error_code ec; 
     
     cout << "Attempting to connect to server with ip: " << dstIp << endl;
 
     string address = "ws://" + dstIp;
+
     Client::connection_ptr con = client.get_connection(address, ec);
     
     if (ec) {
@@ -53,18 +55,10 @@ void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
     return;
 }
 
-/// TEMP MIMICING WHAT A CLIENT SENDS ON CONNECTION
-void ServerSocket::SendPayload() {
-    // // Creating json
-    // Json jsonMessage;
-
-    // jsonMessage["type"] = "data";
-    // jsonMessage["data"]["type"] = "hello";
-    // jsonMessage["data"]["public_key"] = to_string(rand() % 100);
-
-    // client.send(connection, to_string(jsonMessage), websocketpp::frame::opcode::text);
-}
-
 void ServerSocket::SendJson(Json json) {
     client.send(connection, to_string(json), websocketpp::frame::opcode::text);
+}
+
+string ServerSocket::GetConnectionAddress() {
+    return connectionAddress;
 }

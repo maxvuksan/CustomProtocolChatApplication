@@ -16,7 +16,7 @@ class ClientSocket {
         void Start(std::string finalAddress);
         void End();
 
-        int SendChatMessage(ChatMessage chatMessage);
+        int SendChatMessage(std::string chatMessage);
 
         // allow the client socket to talk to the UI 
         void SetChatApplication(ChatApplication* ref){this->chatApplication = ref;}

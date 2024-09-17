@@ -28,14 +28,17 @@ class ServerHost {
         void OnMessage(websocketpp::connection_hdl, server_type::message_ptr);
         void OnOpen();
 
-        void AddClient(std::string);
+        void AddClient(std::string, websocketpp::connection_hdl);
         void SendClientUpdate();
 
         void AddNewExternalClientList(websocketpp::connection_hdl, std::string);
         void UpdateExternalClientList(websocketpp::connection_hdl, nlohmann::json);
         void SendAllClientLists(websocketpp::connection_hdl);
 
+        void SendChatMessage(nlohmann::json, nlohmann::json);
+
         std::list<std::string> clientList;
+        std::list<websocketpp::connection_hdl> clientConnections;
         std::list<ServerSocket> * serverSockets;
 
         std::list<ClientList> externalClientLists;
