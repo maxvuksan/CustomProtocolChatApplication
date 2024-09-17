@@ -27,6 +27,7 @@ class ServerHost {
     private:
         void OnMessage(websocketpp::connection_hdl, server_type::message_ptr);
         void OnOpen();
+        void OnClose(websocketpp::connection_hdl);
 
         void AddClient(std::string, websocketpp::connection_hdl);
         void SendClientUpdate();
@@ -40,8 +41,8 @@ class ServerHost {
 
         std::list<std::string> clientList;
         std::list<websocketpp::connection_hdl> clientConnections;
-        std::list<ServerSocket> * serverSockets;
 
+        std::list<ServerSocket> * serverSockets;
         std::list<ClientList> externalClientLists;
 
         std::string myAddress;

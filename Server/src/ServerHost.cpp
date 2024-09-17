@@ -46,6 +46,38 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
 
 }
 
+void ServerHost::OnClose(websocketpp::connection_hdl connection) {
+
+    // Client section
+    list<string>::iterator il = clientList.begin();
+    for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
+        if (connection.owner_before(*it) || it->owner_before(connection)) {
+            continue;
+        }
+        
+        clientConnections.erase(it);
+        clientList.erase(il);
+
+        SendClientUpdate();
+
+        il++;
+    }
+
+    // Server section
+    list<ServerSocket>::iterator ul = serverSockets->begin(); 
+    for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
+        if (connection.owner_before(it->connection) || it->connection.owner_before(connection)) {
+            continue;
+        }
+        
+        externalClientLists.erase(it);
+        serverSockets->erase(ul);
+
+        ul++;
+    }
+
+}
+
 // NOT TESTED YET
 void ServerHost::SendPublicChatMessage(Json message) {
 
@@ -141,6 +173,8 @@ void ServerHost::UpdateExternalClientList(websocketpp::connection_hdl connection
         for (auto& x : jsonArray.items()) {
             it->clientList.push_back(x.value());
         }
+
+
     }
 }
 
@@ -155,6 +189,7 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string a
         server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
         server.set_message_handler(bind(&ServerHost::OnMessage, this, placeholders::_1, placeholders::_2));
+        server.set_close_handler(bind(&ServerHost::OnClose, this, placeholders::_1));
 
 
         // Set the listening port
