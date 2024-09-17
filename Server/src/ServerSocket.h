@@ -3,6 +3,7 @@
 #include <iostream>
 #include <list>
 #include <thread>
+#include <unistd.h>
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
@@ -27,6 +28,7 @@ class ServerSocket {
         void SendPayload();
         void OnOpen(websocketpp::connection_hdl);
         void OnMessage(websocketpp::connection_hdl, websocketpp::config::asio_client::message_type::ptr);
+        void OnFail(websocketpp::connection_hdl);
 
         std::string connectionAddress;
         std::string hostAddress;

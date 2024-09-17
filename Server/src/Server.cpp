@@ -4,7 +4,10 @@ using namespace std;
 
 int Server::StartServer() {
 
-    cout << "Enter server ip " << endl;
+
+
+
+    cout << "Enter server public ip " << endl;
     cin >> address; 
     int port;
     cout << "Enter server port " << endl;
@@ -15,6 +18,22 @@ int Server::StartServer() {
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
+
+    // Connect to servers in server list.txt
+    ifstream file("Server List.txt");
+    if (!file.is_open()) {
+        return -1; 
+    }
+
+    string line;
+    while (getline(file, line)) {
+        // ConnectToServer(line);
+    }
+
+    file.close();
+
+
+
 
     while (1) {
         string command;

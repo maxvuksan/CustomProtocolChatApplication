@@ -3,6 +3,7 @@
 #include <thread>
 #include <sstream>
 #include <list>
+#include <fstream>
 
 #include "ServerSocket.h"
 #include "ServerHost.h"
