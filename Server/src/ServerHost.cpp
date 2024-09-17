@@ -18,6 +18,10 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
         SendAllClientLists(hdl);
     }
 
+    if (type == "client_update_request") {
+        SendClientUpdate();
+    }
+
     // Signed data
     if (type != "signed_data") {
         return;
@@ -59,6 +63,7 @@ void ServerHost::OnClose(websocketpp::connection_hdl connection) {
         clientList.erase(il);
 
         SendClientUpdate();
+        SendAllClientListsToAllClients();
 
         il++;
     }
@@ -72,6 +77,8 @@ void ServerHost::OnClose(websocketpp::connection_hdl connection) {
         
         externalClientLists.erase(it);
         serverSockets->erase(ul);
+
+        SendAllClientListsToAllClients();
 
         ul++;
     }
@@ -150,6 +157,38 @@ void ServerHost::SendAllClientLists(websocketpp::connection_hdl connection) {
     
 }
 
+void ServerHost::SendAllClientListsToAllClients() {
+    Json jsonMessage;
+
+    jsonMessage["type"] = "client_list";
+    jsonMessage["servers"] = {};
+
+    Json myServer;
+    myServer["address"] = myAddress;
+    myServer["clients"] = {}; 
+    for (list<string>::iterator it = clientList.begin(); it != clientList.end(); it++) {
+        myServer["clients"].push_back(*it);
+    }
+
+    jsonMessage["servers"].push_back(myServer);
+
+    for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
+        Json server;
+        server["address"] = it->address;
+        server["clients"] = {};
+
+        for (list<string>::iterator il = it->clientList.begin(); il != it->clientList.end(); il++) {
+            server["clients"].push_back(*il);
+        }
+
+        jsonMessage["servers"].push_back(server);
+    }
+
+    for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
+        server.send(*it, to_string(jsonMessage), websocketpp::frame::opcode::text);
+    }
+}
+
 void ServerHost::AddNewExternalClientList(websocketpp::connection_hdl connection, string address) {
 
     ClientList externalClientListElement;
@@ -157,6 +196,14 @@ void ServerHost::AddNewExternalClientList(websocketpp::connection_hdl connection
     externalClientListElement.address = address;
 
     externalClientLists.push_back(externalClientListElement);
+
+
+    Json jsonClientRequest;
+    jsonClientRequest["type"] = "client_update_request";
+    
+    for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); it++) {
+        it->SendJson(jsonClientRequest);
+    }
 };
 
 
@@ -173,9 +220,9 @@ void ServerHost::UpdateExternalClientList(websocketpp::connection_hdl connection
         for (auto& x : jsonArray.items()) {
             it->clientList.push_back(x.value());
         }
-
-
     }
+
+    SendAllClientListsToAllClients();
 }
 
 void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string address) {
@@ -216,6 +263,7 @@ void ServerHost::AddClient(string publicKey, websocketpp::connection_hdl hdl) {
     clientConnections.push_back(hdl);
 
     SendClientUpdate();
+    SendAllClientListsToAllClients();
 }
 
 void ServerHost::SendClientUpdate() {
