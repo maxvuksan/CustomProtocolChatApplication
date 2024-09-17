@@ -403,7 +403,6 @@ void ChatApplication::Update(){
             socket.SendChatMessage(newMessage);
 
             currentClient.PushMessage({newMessage, "me", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
-            
 
             selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 
@@ -411,7 +410,6 @@ void ChatApplication::Update(){
             inputBuffer[0] = '\0';
             ImGui::SetKeyboardFocusHere(-1);
             scroll = true;
-
         }
     } 
 

@@ -13,7 +13,9 @@
 typedef websocketpp::client<websocketpp::config::asio_client> Client;
 
 class ServerSocket {
+
     public:
+    
         void ConnectToServer(std::string, std::string);
         void SendJson(nlohmann::json);
 

@@ -12,13 +12,37 @@ class Client {
     public:
 
         Client();
+
         const std::unordered_map<std::string, std::vector<ChatMessage>>& GetAllMessages();
+
         const std::vector<ChatMessage>& GetUserMessages(std::string users); 
+
+        // removes all active clients with the marked flag set to true
+        void RemoveMarkedClients();
+        void MarkClient(int index, bool marked);
+
+        /*
+            @returns a referenced to the active user vector
+        */
         const std::vector<ActiveUsers>& GetActiveUsers();
-        const ChatMessage& GetChatMessage(std::string user, int index);
+
+        /*
+            @returns index of client, -1 if no client is found
+        */        
+        int GetClientIndex(std::string username, std::string serverOfOrigin);
+
+        /*
+            get a specific chat message from a given user
+        */
+        const ChatMessage& GetChatMessage(std::string username, int index);
 
         void ClearActiveUsers(){activeUsers.clear();}
-        void PushActiveUser(std::string username);
+
+        /*
+            @param username display name for the client (will generally be the public key)
+            @param serverOfOrigin where is this client from? formatted "ip:port"
+        */
+        void PushActiveUser(std::string username, std::string serverOfOrigin, bool marked = false);
 
         void UserLeave(std::string user);
         void UserJoin(std::string user);
