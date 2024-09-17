@@ -35,6 +35,7 @@ class ServerHost {
         void AddNewExternalClientList(websocketpp::connection_hdl, std::string);
         void UpdateExternalClientList(websocketpp::connection_hdl, nlohmann::json);
         void SendAllClientLists(websocketpp::connection_hdl);
+        void SendAllClientListsToAllClients();
 
         void SendChatMessage(nlohmann::json, nlohmann::json);
         void SendPublicChatMessage(nlohmann::json);

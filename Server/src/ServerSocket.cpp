@@ -12,13 +12,19 @@ void ServerSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
 void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
     connection = hdl;
 
-    Json jsonMessage;
+    Json jsonHello;
 
-    jsonMessage["type"] = "signed_data";
-    jsonMessage["data"]["type"] = "server_hello";
-    jsonMessage["data"]["sender"] = hostAddress;
+    jsonHello["type"] = "signed_data";
+    jsonHello["data"]["type"] = "server_hello";
+    jsonHello["data"]["sender"] = hostAddress;
 
-    SendJson(jsonMessage);
+    SendJson(jsonHello);
+
+    Json jsonClientRequest;
+
+    jsonClientRequest["type"] = "client_update_request";
+
+    SendJson(jsonClientRequest);
 }
 
 ServerSocket::ServerSocket() {

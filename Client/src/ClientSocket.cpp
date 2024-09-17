@@ -4,7 +4,6 @@
 #include <json.hpp>
 #include "ChatApplication.h"
 
-
 using namespace std;
 using Json = nlohmann::json;
 
