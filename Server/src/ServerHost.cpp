@@ -39,6 +39,19 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
         SendChatMessage(json, addresses);
     }
 
+    if (type == "public_chat") {
+        SendPublicChatMessage(json);    
+    }
+
+
+}
+
+// NOT TESTED YET
+void ServerHost::SendPublicChatMessage(Json message) {
+
+    for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
+        server.send(*it, to_string(message), websocketpp::frame::opcode::text);
+    }
 
 }
 
