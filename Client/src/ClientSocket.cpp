@@ -32,18 +32,47 @@ void ClientSocket::ParseMessage(const std::string& data){
 
         // TEMP : Clears the whole list of clients, should instead determine which clients should be updated and only update those
 
-        client->ClearActiveUsers();
+        const std::vector<ActiveUsers>& activeUsers = client->GetActiveUsers();
 
-        int serverI = 0;
+
+        // mark all the active users
+        for(int i = 0; i < activeUsers.size(); i++){
+            client->MarkClient(i, true);
+        }
+
+        
+        // update and unmark clients that we find
+
         for(auto serverInput : json["servers"]){
             
-            for(auto clientInput : json["servers"][serverI]["clients"]){
+            for(auto clientInput : serverInput["clients"]){
 
-                client->PushActiveUser(clientInput);
+                int index = client->GetClientIndex(clientInput, serverInput["address"]);
 
+                if(index != -1){
+                    
+                    client->MarkClient(index, false);
+                }
+                else{
+                    client->PushActiveUser(clientInput, serverInput["address"], false);
+                }
             }
-            serverI++;
         }
+
+        // remove all the clients which are still marked
+        client->RemoveMarkedClients();
+
+
+        uniqueServerList.clear();
+
+        for(int i = 0; i < activeUsers.size(); i++){
+
+            // add if not found
+            if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) != uniqueServerList.end()){
+                uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
+            }
+        }
+
     }
 
 }
@@ -70,9 +99,12 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     // Creating json 
     Json helloMessage;
 
+    srand(time(NULL));
+    publicKey = rand() % 99999;
+
     helloMessage["type"] = "signed_data";
     helloMessage["data"]["type"] = "hello";
-    helloMessage["data"]["public_key"] = "0123"; // TEMP
+    helloMessage["data"]["public_key"] = std::to_string(publicKey); // TEMP
     helloMessage["counter"] = counter;
     counter++;
 
@@ -143,7 +175,8 @@ int ClientSocket::SendChatMessage(string chatMessage) {
     jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
 
-    jsonMessage["data"]["destination_servers"] = {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
+
+    jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
 
     // Chat part
     jsonMessage["data"]["chat"] = chatMessage;

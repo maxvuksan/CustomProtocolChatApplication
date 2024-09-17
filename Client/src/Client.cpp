@@ -30,6 +30,30 @@ Client::Client(){
     allMessages["SAZY11"] = {};
 }
 
+void Client::RemoveMarkedClients(){
+
+    bool markedFound = true;
+    
+    while(markedFound){
+        
+        markedFound = false;
+
+        for(int i = 0; i < activeUsers.size(); i++){
+
+            // we found something to remove
+            if(activeUsers[i].marked){
+                markedFound = true;
+                activeUsers.erase(activeUsers.begin() + i);
+                break;
+            } 
+        }
+    }
+}
+
+void Client::MarkClient(int index, bool marked){
+    activeUsers[index].marked = marked;
+}
+
 void Client::ParseMessage(std::string currentUser, ChatMessage currentMessage){
     allMessages[currentUser].push_back(currentMessage);
     return;
@@ -48,14 +72,15 @@ const ChatMessage& Client::GetChatMessage(std::string currentUser, int index){
     return allMessages[currentUser][index];
 }
 
-void Client::PushActiveUser(std::string username)
+void Client::PushActiveUser(std::string username, std::string serverOfOrigin, bool marked)
 {   
-    this->activeUsers.push_back(ActiveUsers({username, "0", ChatApplication::GetRandomColourIndex()}));
+    this->activeUsers.push_back(ActiveUsers({username, "0", ChatApplication::GetRandomColourIndex(), serverOfOrigin, marked}));
 }
 
 int Client::GetColourIndex(std::string user){
 
     for(int i = 0; i < activeUsers.size(); i++){
+
         if(activeUsers[i].username == user){
             return activeUsers[i].colourIndex;
         }
@@ -73,6 +98,17 @@ const std::vector<ChatMessage>& Client::GetUserMessages(std::string users){
 const std::vector<ActiveUsers>& Client::GetActiveUsers(){
     return activeUsers;
 }
+
+int Client::GetClientIndex(std::string username, std::string serverOfOrigin){
+
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].username == username && activeUsers[i].serverOfOrigin == serverOfOrigin){
+            return i;
+        }
+    }
+    return -1;
+}
+
 
 void Client::PushMessage(ChatMessage currentMessage, std::string currentUser){
     allMessages[currentUser].push_back(currentMessage);
@@ -111,11 +147,9 @@ void Client::UserLeave(std::string user){
 
     for(int i = 0; i < activeUsers.size(); i++){
         
-        
         if(activeUsers[i].username == user){
             activeUsers.erase (activeUsers.begin()+i);
         }
-
     }
 
     return;

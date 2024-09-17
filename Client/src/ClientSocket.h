@@ -30,6 +30,10 @@ class ClientSocket {
 
     private:
 
+        int publicKey;
+
+        // where all the clients are from
+        std::vector<std::string> uniqueServerList;
 
         Client* client;
         ChatApplication* chatApplication;
