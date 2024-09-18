@@ -1,7 +1,8 @@
 #include "ChatApplication.h"
 #include "Client.h"
 #include "Globals.h"
-
+#include <fstream>
+#include <string>
 
 std::vector<ImVec4> ChatApplication::colourVector = {
     {0.97, 0.96, 0.42, 1.0}, // yellow
@@ -11,6 +12,8 @@ std::vector<ImVec4> ChatApplication::colourVector = {
     {0.57, 0.91, 0.47, 1.0}, // green
     {1.0, 1.0, 1.0, 1.0}, // white
 };
+
+std::vector<std::string> ChatApplication::pseudoNameVector = {};
 
 std::vector<ImVec4> ChatApplication::colourVectorU32 = {
     {247, 245, 108, 255}, // yellow
@@ -24,12 +27,33 @@ std::vector<ImVec4> ChatApplication::colourVectorU32 = {
 void ChatApplication::Start(){
     // Creating thread for client socket
 
+    Configure_PseudoNameList();
     Configure_FontList();
     selectedUser = 0;
     connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
     socket.SetClient(&currentClient);
+}
+
+void ChatApplication::Configure_PseudoNameList(){
+
+    std::ifstream file("./UsernameList.txt");
+    
+    if (!file.is_open()) {
+        std::cerr << "Error opening file UsernameList.txt" << std::endl;
+        return;
+    }
+
+    std::string name;
+    while (std::getline(file, name)) {
+        if (!name.empty()) { // Check if the line is not empty
+            pseudoNameVector.push_back(name);
+        }
+    }
+
+    file.close();
+
 }
 
 void ChatApplication::Configure_FontList(){
@@ -175,7 +199,8 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
             
             draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
             draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[i].username.c_str());
+            std::string psuedoName = GetPsuedoNameFromInt(std::stoi(currentClient.GetActiveUsers()[i].username));
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), psuedoName.c_str());
 
         }
         else if(hovered){

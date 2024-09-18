@@ -35,6 +35,7 @@ class ChatApplication : public Program{
             Populates the fontList vector (configuring each font respectivley)
         */
         void Configure_FontList();
+        static void Configure_PseudoNameList();
 
         std::string GetCurrentDateTime(bool forUser);
 
@@ -48,6 +49,8 @@ class ChatApplication : public Program{
         */
         static int GetRandomColourIndex(){return rand() % colourVector.size();}
 
+        static std::string GetPsuedoNameFromInt(int index){return pseudoNameVector[index % pseudoNameVector.size()];}
+
     private:
 
         Client currentClient;
@@ -57,6 +60,7 @@ class ChatApplication : public Program{
         ConnectedState connectedState;
         std::string serverAddressToJoin;
 
+        static std::vector<std::string> pseudoNameVector; // display names
         static std::vector<ImVec4> colourVector;
         static std::vector<ImVec4> colourVectorU32;
         
