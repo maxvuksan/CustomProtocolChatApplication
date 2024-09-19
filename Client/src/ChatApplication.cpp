@@ -355,6 +355,8 @@ void ChatApplication::Update(){
         ImGui::OpenPopup("Select Server");
     }
 
+    
+
     static char inputBuffer[256] = "";  // Buffer to hold the input text
     static bool scroll = true;
     
