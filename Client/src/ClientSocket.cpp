@@ -15,8 +15,6 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
 
 void ClientSocket::ParseMessage(const std::string& data){
 
-    std::cout << data << "\n";
-
     Json json = Json::parse(data);
     
     string topmostType = json["type"];
@@ -67,7 +65,7 @@ void ClientSocket::ParseMessage(const std::string& data){
         for(int i = 0; i < activeUsers.size(); i++){
 
             // add if not found
-            if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) != uniqueServerList.end()){
+            if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) == uniqueServerList.end()){
                 uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
             }
         }
@@ -120,6 +118,7 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
 /// ClientSocket functions
 void ClientSocket::Start(std::string finalAddress) {
+
     try {
 
         chatApplication->SetConnectedState(CS_IN_PROGRESS);
@@ -174,13 +173,14 @@ int ClientSocket::SendChatMessage(string chatMessage) {
     jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
 
-
     jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
 
     // Chat part
     jsonMessage["data"]["chat"] = chatMessage;
 
     asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
+
+    std::cout << "message sent\n";
 
     return 0;
 }

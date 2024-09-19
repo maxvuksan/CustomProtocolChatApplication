@@ -85,15 +85,9 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "*.ipp": "cpp",
-        "*.tcc": "cpp",
-        "bitset": "cpp",
         "cwctype": "cpp",
-        "memory_resource": "cpp",
-        "regex": "cpp",
-        "string_view": "cpp",
+        "resumable": "cpp",
         "numbers": "cpp",
-        "semaphore": "cpp",
-        "cinttypes": "cpp",
-        "variant": "cpp"
+        "semaphore": "cpp"
     }
 }
