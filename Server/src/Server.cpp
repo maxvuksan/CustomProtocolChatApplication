@@ -4,11 +4,22 @@ using namespace std;
 
 int Server::StartServer() {
 
+    ifstream file("Server Properties.txt");
+    if (!file.is_open()) {
+        return -1;
+    }
 
+    string line;
+    while (getline(file, line)) {
+        address = line;
+    }
+    file.close();
 
+    if (address == "") {
+        cout << "Enter server public ip " << endl;
+        cin >> address; 
+    }
 
-    cout << "Enter server public ip " << endl;
-    cin >> address; 
     int port;
     cout << "Enter server port " << endl;
     cin >> port;
@@ -21,13 +32,11 @@ int Server::StartServer() {
 
 
     // Connect to servers in server list.txt
-    ifstream file("Server List.txt");
+    file = ifstream("Server List.txt");
     if (!file.is_open()) {
         return -1; 
     }
 
-
-    string line;
     while (getline(file, line)) {
         ConnectToServer(line);
     }
