@@ -15,8 +15,6 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
 
 void ClientSocket::ParseMessage(const std::string& data){
 
-    std::cout << data << "\n";
-
     Json json = Json::parse(data);
     
     string topmostType = json["type"];
@@ -174,8 +172,6 @@ int ClientSocket::SendChatMessage(string chatMessage) {
     jsonMessage["data"]["type"] = "chat";
     jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
-
-
 
     jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
 
