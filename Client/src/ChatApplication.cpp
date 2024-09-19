@@ -199,7 +199,16 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
             
             draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
             draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
-            std::string psuedoName = GetPsuedoNameFromInt(std::stoi(currentClient.GetActiveUsers()[i].username));
+            std::string psuedoName;
+            try {
+                int number = std::stoi(currentClient.GetActiveUsers()[i].username);
+                psuedoName = GetPsuedoNameFromInt(number);
+            } catch (const std::invalid_argument& e){
+                psuedoName = currentClient.GetActiveUsers()[i].username;
+            } catch (const std::out_of_range& e){
+                psuedoName = currentClient.GetActiveUsers()[i].username;
+            }
+
             draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), psuedoName.c_str());
 
         }

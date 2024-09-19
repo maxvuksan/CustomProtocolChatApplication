@@ -8,12 +8,12 @@ Client::Client(){
 
     activeUsers = {
             {"lexi", "", 1},
-            {"ash", "", 2},
-            {"max", "", 3},
-            {"john star", "", 4},
-            {"tony butcher", "", 2},
-            {"catlover123", "", 4},
-            {"SAZY11", "", 3},
+            {"11", "", 2},
+            {"10", "", 3},
+            {"5", "", 4},
+            {"6", "", 2},
+            {"7", "", 4},
+            {"8", "", 3},
     };
 
     std::vector<ChatMessage> messages1 = {
@@ -21,13 +21,11 @@ Client::Client(){
 
     };
 
-    allMessages["lexi"].push_back(ChatMessage({"Hey guys how is everyone", "lexi", "22/08/2024 1:32 PM"}));
-    allMessages["ash"].push_back(ChatMessage({"Hello my name is ashlan", "ash", "22/08/2024 1:32 PM"}));
-    allMessages["max"].push_back(ChatMessage({"cat cat cat cat cat cat cat cat", "max", "22/08/2024 1:32 PM"}));
-    allMessages["john star"].push_back(ChatMessage({"johnny time", "john star", "22/08/2024 1:32 PM"}));
-    allMessages["tony butcher"].push_back(ChatMessage({"Hello everyone my name is tony", "tony butcher", "22/08/2024 1:32 PM"}));
-    allMessages["catlover123"].push_back(ChatMessage({"Hey! I am definitely not Max!!", "catlover123", "22/08/2024 1:32 PM"}));
-    allMessages["SAZY11"] = {};
+    allMessages["lexi"].push_back(ChatMessage({"Hey guys how is everyone", "123", "22/08/2024 1:32 PM"}));
+    allMessages["11"].push_back(ChatMessage({"Hello my name is ashlan", "ash", "22/08/2024 1:32 PM"}));
+    allMessages["10"].push_back(ChatMessage({"cat cat cat cat cat cat cat cat", "max", "22/08/2024 1:32 PM"}));
+    allMessages["5"].push_back(ChatMessage({"johnny time", "john star", "22/08/2024 1:32 PM"}));
+
 }
 
 void Client::RemoveMarkedClients(){

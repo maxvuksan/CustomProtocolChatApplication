@@ -84,6 +84,10 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "cwctype": "cpp",
+        "resumable": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     }
 }

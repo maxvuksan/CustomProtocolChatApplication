@@ -1,0 +1,25 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-I", "C:/Program Files (x86)/OpenSSL-Win32include",        // OpenSSL headers
+                "-L", "C:/Program Files (x86)/OpenSSL-Win32/lib",            // OpenSSL libraries
+                "-lssl", "-lcrypto",                     // Link against OpenSSL libraries
+                // "${workspaceFolder}/main.cpp",
+                // "-o", "${workspaceFolder}/main.exe"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Generated task for building C++ code with OpenSSL"
+        }
+    ]
+}
