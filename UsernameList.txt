@@ -1,4 +1,4 @@
-Stealthy Panda
+Punky Panda
 Clever Coyote
 Charming Chipmunk
 Witty Wombat
@@ -19,7 +19,7 @@ Rusty Rabbit
 Slippery Snail
 Wide Whale
 Radiant Rhino
-Sly Fox
+Sly Slinky
 Vibrant Vulture
 Zany Zebra
 Bubbly Bunny
@@ -39,4 +39,5 @@ Tropical Tortoise
 Whimsical Whale
 Xenial Xerus
 Yappy Yak
-Zealous Zorse
+Zesty Zorse
+Cool Cat

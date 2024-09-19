@@ -165,6 +165,10 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
     for(int i = 0; i < currentClient.GetActiveUsers().size(); i++){
 
+        if(currentClient.GetActiveUsers()[i].username.c_str() == std::to_string(socket.GetPublicKey())){
+            continue;
+        }
+
         ImGuiIO& io = ImGui::GetIO();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 button_size = ImVec2(windowSize.x - ImGui::GetStyle().WindowPadding.x * 2.0f, GLOBAL_PADDING + 10); // Adjust size as needed
@@ -193,13 +197,7 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
         ImVec2 text1_size = io.Fonts->Fonts[0]->CalcTextSizeA(16.0f, FLT_MAX, 0.0f, currentClient.GetActiveUsers()[i].username.c_str());
         ImVec2 text1_pos = ImVec2(30 + button_pos.x, (button_size.y - text1_size.y) * 0.5f + button_pos.y - 5);
 
-        if(i == selectedUser){
-            int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].username);
-            ImVec4 currentColour = colourVectorU32[currentColourIndex];
-            
-            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
-            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
-            std::string psuedoName;
+        std::string psuedoName;
             try {
                 int number = std::stoi(currentClient.GetActiveUsers()[i].username);
                 psuedoName = GetPsuedoNameFromInt(number);
@@ -209,16 +207,24 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
                 psuedoName = currentClient.GetActiveUsers()[i].username;
             }
 
+        if(i == selectedUser){
+            int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].username);
+            ImVec4 currentColour = colourVectorU32[currentColourIndex];
+            
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
+            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
+            
+
             draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), psuedoName.c_str());
 
         }
         else if(hovered){
             draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].username.c_str());
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), psuedoName.c_str());
         }
         else{
             draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].username.c_str());
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), psuedoName.c_str());
         }
 
         int newSelectedUser = selectedUser;
@@ -354,14 +360,15 @@ void ChatApplication::Update(){
     
     //glfwSetCursor(GetWindow(), glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
-    ImGui::Begin("Users", nullptr); // Create a new ImGui window
-    
-    DrawCustomUserButtons(scroll);
+    //if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].username != " ")){
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+        ImGui::Begin("Users", nullptr); // Create a new ImGui window
+        
+        DrawCustomUserButtons(scroll);
 
-    ImGui::End(); // End the ImGui window
-    ImGui::PopStyleVar(1);
-
+        ImGui::End(); // End the ImGui window
+        ImGui::PopStyleVar(1);
+   // }
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
     ImGui::Begin("Messages", nullptr, ImGuiWindowFlags_NoScrollbar); 
@@ -386,7 +393,7 @@ void ChatApplication::Update(){
         
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,5));
         
-        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy == "me"){
+        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy == "me ("+GetPsuedoNameFromInt(socket.GetPublicKey())+")"){
             PushFont(FONT_BOLD, colourVector[5]);
         } else {
             PushFont(FONT_BOLD, colourVector[currentClient.GetColourIndex(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).sentBy)]);
@@ -423,30 +430,31 @@ void ChatApplication::Update(){
 
     // Add a separator and a text box at the bottom of the window
 
-    ImGui::SetNextItemWidth(contentRegion.x);
+    if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].username != " ")){
+        ImGui::SetNextItemWidth(contentRegion.x);
 
-    if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
 
-        // Process the input here, for example, send the message
-        std::string newMessage(inputBuffer);
-        
-        if (!newMessage.empty()) {
-            // Add the new message to the selected user's message list (pseudo-code)
+            // Process the input here, for example, send the message
+            std::string newMessage(inputBuffer);
+            
+            if (!newMessage.empty()) {
+                // Add the new message to the selected user's message list (pseudo-code)
 
-            // Sending chat message to server
-            socket.SendChatMessage(newMessage);
+                // Sending chat message to server
+                socket.SendChatMessage(newMessage);
 
-            currentClient.PushMessage({newMessage, "me", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
+                currentClient.PushMessage({newMessage, "me ("+GetPsuedoNameFromInt(socket.GetPublicKey())+")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
 
-            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
+                selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 
-            // Clear the input buffer
-            inputBuffer[0] = '\0';
-            ImGui::SetKeyboardFocusHere(-1);
-            scroll = true;
-        }
-    } 
-
+                // Clear the input buffer
+                inputBuffer[0] = '\0';
+                ImGui::SetKeyboardFocusHere(-1);
+                scroll = true;
+            }
+        } 
+    }
     ImGui::End();
 
     DrawConnectToServerModal();

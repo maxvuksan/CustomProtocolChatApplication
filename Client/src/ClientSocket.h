@@ -27,7 +27,7 @@ class ClientSocket {
 
         void OnClose(websocketpp::connection_hdl hdl);
         void OnOpen(websocketpp::connection_hdl hdl);
-
+        int GetPublicKey(){return publicKey;};
     private:
 
         int publicKey;
