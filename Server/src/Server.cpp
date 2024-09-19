@@ -19,21 +19,20 @@ int Server::StartServer() {
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
 
+
     // Connect to servers in server list.txt
     ifstream file("Server List.txt");
     if (!file.is_open()) {
         return -1; 
     }
 
+
     string line;
     while (getline(file, line)) {
-        // ConnectToServer(line);
+        ConnectToServer(line);
     }
 
     file.close();
-
-
-
 
     while (1) {
         string command;
@@ -67,11 +66,34 @@ void Server::CommandManager(string command) {
         case -2:
             cout << "Unknown command" << endl;
             break;
+        case -3:
+            cout << "Cannot connect to your own server" << endl;
+            break;
     }
 }
 
+// Deprecated
+void Server::RemoveSocketAt(int index) {
+
+    auto socketIt = socketList.begin();
+    advance(socketIt, index);
+    socketList.erase(socketIt);
+
+    auto addressIt = addressList.begin();
+    advance(addressIt, index);
+    addressList.erase(addressIt);
+
+    auto threadIt = threadList.begin();
+    advance(threadIt, index);
+    threadIt->join();
+    threadList.erase(threadIt);    
+}
+
 int Server::ConnectToServer(string dstIp) {
-    
+    if (dstIp == address) {
+        return -3;
+    }
+
     socketList.emplace_back();
     addressList.push_back(dstIp);
 
