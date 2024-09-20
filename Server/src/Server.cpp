@@ -4,6 +4,8 @@ using namespace std;
 
 int Server::StartServer() {
 
+    StartHttpsServer();
+
     ifstream file("Server Properties.txt");
     if (!file.is_open()) {
         return -1;
@@ -30,6 +32,7 @@ int Server::StartServer() {
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
 
+    
 
     // Connect to servers in server list.txt
     file = ifstream("Server List.txt");
@@ -51,6 +54,23 @@ int Server::StartServer() {
     }
 
     return 0;
+}
+
+void Server::StartHttpsServer() {
+
+    try {
+        asio::io_context io_context;
+
+        asio::ssl::context ssl_context(asio::ssl::context::sslv23);
+        ssl_context.use_certificate_chain_file("-server.crt");
+        ssl_context.use_private_key_file("server.key", asio::ssl::context::pem);
+
+        HttpsServer server(io_context, std::atoi("80"), ssl_context);
+
+        io_context.run();
+        } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
 }
 
 void Server::CommandManager(string command) {
