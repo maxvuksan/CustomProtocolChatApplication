@@ -1,7 +1,7 @@
 
 
 SHARED_INCLUDE = -I./include
-SHARED_LIBS = -L./lib -lws2_32 -lmswsock -lcryptopp
+SHARED_LIBS = -L./lib -lws2_32 -lmswsock -lcryptopp -lssl -lcrypto
 SHARED_FLAGS = -std=c++17 -DASIO_STANDALONE -D_WEBSOCKETPP_CPP11_THREAD_
 
 # forcing make client and make server to always make
