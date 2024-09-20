@@ -63,7 +63,7 @@ void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
     
     cout << "Attempting to connect to server with ip: " << dstIp << endl;
 
-    string address = "ws://" + dstIp;
+    string address = "wss://" + dstIp;
 
     Client::connection_ptr con = client.get_connection(address, ec);
 
