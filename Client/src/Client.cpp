@@ -6,26 +6,11 @@ Client::Client(){
     allMessages.clear();
     activeUsers.clear();
 
-    activeUsers = {
-            {"lexi", "", 1},
-            {"11", "", 2},
-            {"10", "", 3},
-            {"5", "", 4},
-            {"6", "", 2},
-            {"7", "", 4},
-            {"8", "", 3},
-    };
+    activeUsers = {{" ", "", 1}};
 
-    std::vector<ChatMessage> messages1 = {
-        ChatMessage({"Hey guys how is everyone"}),
+    std::vector<ChatMessage> messages1 = {};
 
-    };
-
-    allMessages["lexi"].push_back(ChatMessage({"Hey guys how is everyone", "123", "22/08/2024 1:32 PM"}));
-    allMessages["11"].push_back(ChatMessage({"Hello my name is ashlan", "ash", "22/08/2024 1:32 PM"}));
-    allMessages["10"].push_back(ChatMessage({"cat cat cat cat cat cat cat cat", "max", "22/08/2024 1:32 PM"}));
-    allMessages["5"].push_back(ChatMessage({"johnny time", "john star", "22/08/2024 1:32 PM"}));
-
+    allMessages[" "].push_back(ChatMessage({}));
 }
 
 void Client::RemoveMarkedClients(){
@@ -97,10 +82,10 @@ const std::vector<ActiveUsers>& Client::GetActiveUsers(){
     return activeUsers;
 }
 
-int Client::GetClientIndex(std::string username, std::string serverOfOrigin){
+int Client::GetClientIndex(std::string username){
 
     for(int i = 0; i < activeUsers.size(); i++){
-        if(activeUsers[i].username == username && activeUsers[i].serverOfOrigin == serverOfOrigin){
+        if(activeUsers[i].username == username){
             return i;
         }
     }

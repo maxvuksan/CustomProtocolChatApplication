@@ -29,7 +29,7 @@ class Client {
         /*
             @returns index of client, -1 if no client is found
         */        
-        int GetClientIndex(std::string username, std::string serverOfOrigin);
+        int GetClientIndex(std::string username);
 
         /*
             get a specific chat message from a given user

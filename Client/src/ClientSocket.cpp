@@ -44,17 +44,19 @@ void ClientSocket::ParseMessage(const std::string& data){
             
             for(auto clientInput : serverInput["clients"]){
 
-                int index = client->GetClientIndex(clientInput, serverInput["address"]);
+                int index = client->GetClientIndex(clientInput);
 
                 if(index != -1){
                     
                     client->MarkClient(index, false);
-                }
-                else{
+                } else{
                     client->PushActiveUser(clientInput, serverInput["address"], false);
                 }
             }
         }
+
+        // remove self from active users
+        client->MarkClient(client->GetClientIndex(to_string(publicKey)), true);
 
         // remove all the clients which are still marked
         client->RemoveMarkedClients();
