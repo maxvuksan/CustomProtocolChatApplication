@@ -15,6 +15,7 @@ CLIENT_LIBS = -lglfw3dll -lopengl32
 CLIENT_SRCS = ./Client/src/glad.c \
        ./Client/src/*.cpp \
        ./Client/include/imgui/*.cpp \
+	   ./include/mine/mine.cc \
 
 # Compile and link in one step
 client: FORCE

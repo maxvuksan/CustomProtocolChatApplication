@@ -1,122 +1,146 @@
-// // #include "Encryption.h"
+#include "Encryption.h"
+#include <iostream>
+#include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/rand.h>
+#include <vector>
+#include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-// // std::vector<CryptoPP::byte> Encryption::GenerateRandomBytes(size_t length) {
 
-// //     CryptoPP::AutoSeededRandomPool prng;
-// //     std::vector<CryptoPP::byte> bytes(length);
-// //     prng.GenerateBlock(bytes.data(), length);
+Encryption::Encryption() {
+    // Constructor definition
+}
+
+Encryption::~Encryption() {
+    // Destructor definition
+}
+
+std::vector<unsigned char> Encryption::StringToVector(const std::string& str) {
+    return std::vector<unsigned char>(str.begin(), str.end());
+}
+
+std::string Encryption::VectorToString(const std::vector<unsigned char>& vec) {
+    return std::string(vec.begin(), vec.end());
+}
+
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <iostream>
+#include <vector>
+#include <cstring>
+
+bool Encryption::AESEncrypt(const std::vector<unsigned char>& plaintext, const std::vector<unsigned char>& key,
+                std::vector<unsigned char>& ciphertext, std::vector<unsigned char>& iv, std::vector<unsigned char>& tag) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return false;
+
+    int len = 0;
+    int ciphertext_len = 0;
     
-// //     return bytes;
-// // }
+    // Generate a random IV of 16 bytes
+    iv.resize(16);
+    if (!RAND_bytes(iv.data(), iv.size())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// #include <iostream>
-// #include <cryptopp/rsa.h>
-// #include <cryptopp/pssr.h>
-// #include <cryptopp/osrng.h>
-// #include <cryptopp/aes.h>
-// #include <cryptopp/gcm.h>
-// #include <cryptopp/base64.h>
-// #include <cryptopp/sha.h>
-// #include <cryptopp/filters.h>
-// #include <cryptopp/files.h>
+    // Initialize encryption operation with AES-256-GCM
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// using namespace CryptoPP;
-// using namespace std;
+    // Set IV length
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv.size(), nullptr)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// // Helper function to encode to Base64
-// string Base64Encode(const string &input) {
-//     string encoded;
-//     StringSource ss(input, true, new Base64Encoder(new StringSink(encoded)));
-//     return encoded;
-// }
+    // Initialize key and IV
+    if (!EVP_EncryptInit_ex(ctx, nullptr, nullptr, key.data(), iv.data())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// // Helper function to decode from Base64
-// string Base64Decode(const string &input) {
-//     string decoded;
-//     StringSource ss(input, true, new Base64Decoder(new StringSink(decoded)));
-//     return decoded;
-// }
+    // Encrypt the message
+    ciphertext.resize(plaintext.size());
+    if (!EVP_EncryptUpdate(ctx, ciphertext.data(), &len, plaintext.data(), plaintext.size())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    ciphertext_len = len;
 
-// // Generate RSA key pair (public and private keys)
-// void GenerateRSAKeyPair(RSA::PrivateKey &privateKey, RSA::PublicKey &publicKey) {
-//     AutoSeededRandomPool rng;
-//     privateKey.GenerateRandomWithKeySize(rng, 2048);
-//     publicKey.AssignFrom(privateKey);
-// }
+    // Finalize encryption
+    if (!EVP_EncryptFinal_ex(ctx, ciphertext.data() + len, &len)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    ciphertext_len += len;
+    ciphertext.resize(ciphertext_len);
 
-// // Sign the message using RSA-PSS with SHA-256
-// string SignMessage(const RSA::PrivateKey &privateKey, const string &message) {
-//     AutoSeededRandomPool rng;
-//     RSASS<PSS, SHA256>::Signer signer(privateKey);
+    // Get the tag (16 bytes)
+    tag.resize(16);
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag.data())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-//     string signature;
-//     StringSource ss(message, true, new SignerFilter(rng, signer, new StringSink(signature)));
-//     return signature;
-// }
+    EVP_CIPHER_CTX_free(ctx);
+    return true;
+}
 
-// // Encrypt a message with AES-GCM
-// string AESEncrypt(const SecByteBlock &key, const SecByteBlock &iv, const string &plaintext) {
-//     string ciphertext;
+bool Encryption::AESDecrypt(const std::vector<unsigned char>& ciphertext, const std::vector<unsigned char>& key,
+                 const std::vector<unsigned char>& iv, const std::vector<unsigned char>& tag,
+                 std::vector<unsigned char>& plaintext) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return false;
 
-//     GCM<AES>::Encryption aes;
-//     aes.SetKeyWithIV(key, key.size(), iv, iv.size());
+    int len = 0;
+    int plaintext_len = 0;
 
-//     StringSource ss(plaintext, true,
-//         new AuthenticatedEncryptionFilter(aes,
-//             new StringSink(ciphertext)
-//         )
-//     );
-//     return ciphertext;
-// }
+    // Initialize decryption operation with AES-256-GCM
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// // Encrypt AES key using recipient's RSA public key with OAEP and SHA-256
-// string EncryptAESKeyWithRSA(const RSA::PublicKey &recipientPublicKey, const SecByteBlock &aesKey) {
-//     AutoSeededRandomPool rng;
-//     string encryptedKey;
+    // Set IV length
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv.size(), nullptr)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-//     RSAES<OAEP<SHA256>>::Encryptor encryptor(recipientPublicKey);
-//     StringSource ss(aesKey.data(), aesKey.size(), true,
-//         new PK_EncryptorFilter(rng, encryptor,
-//             new StringSink(encryptedKey)
-//         )
-//     );
-//     return encryptedKey;
-// }
+    // Initialize key and IV
+    if (!EVP_DecryptInit_ex(ctx, nullptr, nullptr, key.data(), iv.data())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// // int main() {
-// //     // Step 1: Generate RSA key pair for the sender
-// //     RSA::PrivateKey senderPrivateKey;
-// //     RSA::PublicKey senderPublicKey;
-// //     GenerateRSAKeyPair(senderPrivateKey, senderPublicKey);
+    // Decrypt the ciphertext
+    plaintext.resize(ciphertext.size());
+    if (!EVP_DecryptUpdate(ctx, plaintext.data(), &len, ciphertext.data(), ciphertext.size())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    plaintext_len = len;
 
-// //     // Step 2: Generate RSA key pair for the recipient
-// //     RSA::PrivateKey recipientPrivateKey;
-// //     RSA::PublicKey recipientPublicKey;
-// //     GenerateRSAKeyPair(recipientPrivateKey, recipientPublicKey);
+    // Set the expected tag value
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag.size(), (void*)tag.data())) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
 
-// //     // Step 3: Create a message
-// //     string message = "This is a confidential message.";
+    // Finalize decryption
+    if (!EVP_DecryptFinal_ex(ctx, plaintext.data() + len, &len)) {
+        EVP_CIPHER_CTX_free(ctx);
+        return false;  // Decryption failed, possibly due to tag mismatch
+    }
+    plaintext_len += len;
+    plaintext.resize(plaintext_len);
 
-// //     // Step 4: Sign the message using sender's RSA private key (RSA-PSS)
-// //     string signature = SignMessage(senderPrivateKey, message);
-// //     cout << "Signature (Base64): " << Base64Encode(signature) << endl;
+    EVP_CIPHER_CTX_free(ctx);
+    return true;
+}
 
-// //     // Step 5: Encrypt the message with AES-GCM
-// //     AutoSeededRandomPool rng;
-// //     SecByteBlock aesKey(32);  // AES-256 key
-// //     rng.GenerateBlock(aesKey, aesKey.size());
-
-// //     SecByteBlock iv(16);  // AES IV
-// //     rng.GenerateBlock(iv, iv.size());
-
-// //     string ciphertext = AESEncrypt(aesKey, iv, message);
-// //     cout << "Encrypted message (Base64): " << Base64Encode(ciphertext) << endl;
-
-// //     // Step 6: Encrypt the AES key with recipient's RSA public key
-// //     string encryptedAESKey = EncryptAESKeyWithRSA(recipientPublicKey, aesKey);
-// //     cout << "Encrypted AES key (Base64): " << Base64Encode(encryptedAESKey) << endl;
-
-// //     // The AES ciphertext, IV, and encrypted AES key would be sent in the message
-
-// //     return 0;
-// // }
