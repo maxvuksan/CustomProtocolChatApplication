@@ -18,6 +18,7 @@ class ServerSocket {
     
         void ConnectToServer(std::string, std::string);
         void SendJson(nlohmann::json);
+        bool IsConnected();
 
         std::string GetConnectionAddress();
         
@@ -28,10 +29,14 @@ class ServerSocket {
         websocketpp::connection_hdl connection;
 
         void SendPayload();
+
         void OnOpen(websocketpp::connection_hdl);
         void OnMessage(websocketpp::connection_hdl, websocketpp::config::asio_client::message_type::ptr);
         void OnFail(websocketpp::connection_hdl);
+        void OnClose(websocketpp::connection_hdl);
 
         std::string connectionAddress;
         std::string hostAddress;
+
+        bool connected;
 };

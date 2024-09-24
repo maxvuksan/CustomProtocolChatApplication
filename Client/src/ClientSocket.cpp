@@ -3,6 +3,8 @@
 #include <iostream>
 #include <json.hpp>
 #include "ChatApplication.h"
+#include "Encryption.h"
+#include <mine/mine.h>
 #include <Windows.h>
 
 #include <httplib.h>
@@ -47,17 +49,19 @@ void ClientSocket::ParseMessage(const std::string& data){
             
             for(auto clientInput : serverInput["clients"]){
 
-                int index = client->GetClientIndex(clientInput, serverInput["address"]);
+                int index = client->GetClientIndex(clientInput);
 
                 if(index != -1){
                     
                     client->MarkClient(index, false);
-                }
-                else{
+                } else{
                     client->PushActiveUser(clientInput, serverInput["address"], false);
                 }
             }
         }
+
+        // remove self from active users
+        client->MarkClient(client->GetClientIndex(to_string(publicKey)), true);
 
         // remove all the clients which are still marked
         client->RemoveMarkedClients();
@@ -255,6 +259,42 @@ int ClientSocket::SendChatMessage(string chatMessage) {
 
     // Creating json
     Json jsonMessage;
+
+    Encryption encryptor;
+
+    // Base64 Encoding Test
+    string testEncode = mine::Base64::encode(chatMessage);
+    cout << testEncode << endl;
+    string testDecode = mine::Base64::decode(testEncode);
+    cout << testDecode << endl;
+
+    // key, worry about storage later
+    std::vector<unsigned char> key(32);
+    if (!RAND_bytes(key.data(), key.size())) {
+        std::cerr << "Error generating key." << std::endl;
+        return 1;
+    }
+
+    std::vector<unsigned char> plaintext = encryptor.StringToVector(chatMessage);
+
+    // Containers for ciphertext, IV, and tag
+    std::vector<unsigned char> ciphertext, iv, tag;
+
+    // Encrypt the message
+    if (!encryptor.AESEncrypt(plaintext, key, ciphertext, iv, tag)) {
+        std::cerr << "Encryption failed." << std::endl;
+        return 1;
+    }
+
+    cout << encryptor.VectorToString(ciphertext) << endl;
+
+    std::vector<unsigned char> decrypted_text;
+    if (!encryptor.AESDecrypt(ciphertext, key, iv, tag, decrypted_text)) {
+        std::cerr << "Decryption failed." << std::endl;
+        return 1;
+    }
+
+    cout << encryptor.VectorToString(decrypted_text) << endl;
 
     jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "chat";

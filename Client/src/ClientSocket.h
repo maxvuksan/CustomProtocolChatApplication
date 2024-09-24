@@ -32,6 +32,7 @@ class ClientSocket {
         void SelectFile();
         bool UploadFileToServer(const std::string& filepath);
 
+        int GetPublicKey(){return publicKey;};
     private:
 
         int publicKey;

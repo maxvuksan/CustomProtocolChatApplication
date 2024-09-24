@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "vector": "cpp",
+        "filesystem": "cpp",
+        "format": "cpp",
+        "xstring": "cpp",
         "algorithm": "cpp",
         "any": "cpp",
         "array": "cpp",
@@ -25,10 +27,10 @@
         "cstring": "cpp",
         "ctime": "cpp",
         "cwchar": "cpp",
+        "cwctype": "cpp",
         "deque": "cpp",
         "exception": "cpp",
-        "filesystem": "cpp",
-        "format": "cpp",
+        "resumable": "cpp",
         "forward_list": "cpp",
         "fstream": "cpp",
         "functional": "cpp",
@@ -47,6 +49,7 @@
         "memory": "cpp",
         "mutex": "cpp",
         "new": "cpp",
+        "numbers": "cpp",
         "numeric": "cpp",
         "optional": "cpp",
         "ostream": "cpp",
@@ -54,6 +57,7 @@
         "random": "cpp",
         "ranges": "cpp",
         "ratio": "cpp",
+        "semaphore": "cpp",
         "source_location": "cpp",
         "span": "cpp",
         "sstream": "cpp",
@@ -69,6 +73,7 @@
         "unordered_map": "cpp",
         "utility": "cpp",
         "valarray": "cpp",
+        "vector": "cpp",
         "xfacet": "cpp",
         "xhash": "cpp",
         "xiosbase": "cpp",
@@ -80,17 +85,19 @@
         "xlocnum": "cpp",
         "xloctime": "cpp",
         "xmemory": "cpp",
-        "xstring": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
         "*.ipp": "cpp",
+<<<<<<< HEAD
         "cwctype": "cpp",
         "resumable": "cpp",
         "numbers": "cpp",
         "semaphore": "cpp",
         "regex": "cpp",
         "set": "cpp",
+=======
+>>>>>>> 0e3713ee1476a0154c4d1fcf1c54924f175e35ca
         "unordered_set": "cpp"
     }
 }

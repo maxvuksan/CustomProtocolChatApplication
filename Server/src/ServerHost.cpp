@@ -100,7 +100,7 @@ void ServerHost::SendChatMessage(Json message, Json addresses) {
 
         // Remove destination addresses from the message (Stops looping)
         message["data"]["destination_servers"] = { address };
-        
+
         if (address == myAddress) { // Send message to all clients
             
             for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
@@ -111,6 +111,9 @@ void ServerHost::SendChatMessage(Json message, Json addresses) {
         } else {                    // Send message to destination servers
 
             for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); it++) {
+                if (it->IsConnected() != true) {
+                    continue;
+                }
 
                 if (it->GetConnectionAddress() != address) {
                     continue;
@@ -202,6 +205,10 @@ void ServerHost::AddNewExternalClientList(websocketpp::connection_hdl connection
     jsonClientRequest["type"] = "client_update_request";
     
     for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); it++) {
+        if (it->IsConnected() != true) {
+            continue;
+        }
+
         it->SendJson(jsonClientRequest);
     }
 };
@@ -278,6 +285,10 @@ void ServerHost::SendClientUpdate() {
     }
 
     for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); ++it) {
+        if (it->IsConnected() != true) {
+            continue;
+        }
+
         it->SendJson(jsonMessage);
     }
 }
