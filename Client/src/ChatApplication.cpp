@@ -355,7 +355,7 @@ void ChatApplication::Update(){
 
 
     if(connectedState == CS_DISCONNECTED){
-        //ImGui::OpenPopup("Select Server");
+        ImGui::OpenPopup("Select Server");
     }
 
     
@@ -446,34 +446,35 @@ void ChatApplication::Update(){
 
     // Add a separator and a text box at the bottom of the window
 
-    ImGui::SetNextItemWidth(contentRegion.x);
+    if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].username != " ")){
+        ImGui::SetNextItemWidth(contentRegion.x);
+    }
 
     if(ImGui::Button("Upload File")){
         socket.SelectFile();
     }
 
-        if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
 
-            // Process the input here, for example, send the message
-            std::string newMessage(inputBuffer);
-            
-            if (!newMessage.empty()) {
-                // Add the new message to the selected user's message list (pseudo-code)
+        // Process the input here, for example, send the message
+        std::string newMessage(inputBuffer);
+        
+        if (!newMessage.empty()) {
+            // Add the new message to the selected user's message list (pseudo-code)
 
-                // Sending chat message to server
-                socket.SendChatMessage(newMessage);
+            // Sending chat message to server
+            socket.SendChatMessage(newMessage);
 
-                currentClient.PushMessage({newMessage, "me ("+GetPsuedoNameFromInt(socket.GetPublicKey())+")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
+            currentClient.PushMessage({newMessage, "me ("+GetPsuedoNameFromInt(socket.GetPublicKey())+")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].username);
 
-                selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
+            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].username, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].username);
 
-                // Clear the input buffer
-                inputBuffer[0] = '\0';
-                ImGui::SetKeyboardFocusHere(-1);
-                scroll = true;
-            }
-        } 
-    }
+            // Clear the input buffer
+            inputBuffer[0] = '\0';
+            ImGui::SetKeyboardFocusHere(-1);
+            scroll = true;
+        }
+    } 
     ImGui::End();
 
     DrawConnectToServerModal();

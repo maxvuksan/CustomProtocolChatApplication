@@ -7,6 +7,7 @@
 #include <mine/mine.h>
 #include <Windows.h>
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <httplib.h>
 
 using namespace std;
@@ -150,7 +151,14 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
 
     // Prepare the multipart form
     httplib::MultipartFormDataItems items;
-    items.emplace_back("file", file_data, "application/octet-stream", filepath);
+
+    httplib::MultipartFormData data;
+    data.name = "file";
+    data.content = file_data;
+    data.filename = filepath;
+    data.content_type = "application/octet-stream";
+       
+    items.push_back(data);
 
     // Perform the upload
     auto res = cli.Post("/api/upload", items);
