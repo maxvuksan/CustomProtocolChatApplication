@@ -3,6 +3,9 @@
 #include <iostream>
 #include <json.hpp>
 #include "ChatApplication.h"
+#include <Windows.h>
+
+#include <httplib.h>
 
 using namespace std;
 using Json = nlohmann::json;
@@ -73,6 +76,91 @@ void ClientSocket::ParseMessage(const std::string& data){
     }
 
 }
+
+void ClientSocket::OpenLinkInBrowser(const std::string& url){
+    // This is platform-specific. Adjust based on your OS.
+    #ifdef _WIN32
+        ShellExecuteA(0, 0, url.c_str(), 0, 0, SW_SHOW);
+    #elif __APPLE__
+        std::string command = "open " + url;
+        system(command.c_str());
+    #else
+        std::string command = "xdg-open " + url;
+        system(command.c_str());
+    #endif
+
+    std::cout << "Opening URL...\n";
+
+}
+
+void ClientSocket::SelectFile(){
+    
+    /* Open File Dialogue --------------------------------------------------------- */
+
+    OPENFILENAME ofn;       // common dialog box structure
+    char szFile[260];      // buffer for file name
+
+    // Initialize OPENFILENAME
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFile;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "All Files (*.*)\0*.*\0Text Documents (*.txt)\0*.txt\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    // Display the dialog box
+    if (GetOpenFileName(&ofn)) {
+        std::string selectedFilePath = ofn.lpstrFile;
+        // Handle the selected file path (e.g., print it)
+        printf("Selected file: %s\n", selectedFilePath.c_str());
+
+        if (UploadFileToServer(selectedFilePath)) {
+            std::cout << "File upload successful!" << std::endl;
+        } else {
+            std::cout << "File upload failed." << std::endl;
+        }
+    }
+}
+
+bool ClientSocket::UploadFileToServer(const std::string& filepath){
+    
+    std::string url = "127.0.0.1:443";
+
+    httplib::Client cli(url.c_str());
+
+    // Open the file as binary
+    std::ifstream file(filepath, std::ios::binary);
+    if (!file) {
+        std::cerr << "Could not open file: " << filepath << std::endl;
+        return false;
+    }
+
+    // Read the file into a string
+    std::string file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    // Prepare the multipart form
+    httplib::MultipartFormDataItems items;
+    items.emplace_back("file", file_data, "application/octet-stream", filepath);
+
+    // Perform the upload
+    auto res = cli.Post("/api/upload", items);
+    if (res) {
+        std::cout << "Response code: " << res->status << std::endl;
+        return res->status == 200; // Assuming 200 is the success status code
+    } else {
+        std::cerr << "Error: " << res.error() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 
 // Define a close handler function
 void ClientSocket::OnClose(websocketpp::connection_hdl hdl) {

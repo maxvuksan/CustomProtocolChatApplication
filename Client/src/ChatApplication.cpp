@@ -34,6 +34,7 @@ void ChatApplication::Start(){
 
     socket.SetChatApplication(this);
     socket.SetClient(&currentClient);
+
 }
 
 void ChatApplication::Configure_PseudoNameList(){
@@ -342,11 +343,13 @@ void ChatApplication::DrawConnectToServerModal(){
 
 
 
+
+
 void ChatApplication::Update(){
 
 
     if(connectedState == CS_DISCONNECTED){
-        ImGui::OpenPopup("Select Server");
+        //ImGui::OpenPopup("Select Server");
     }
 
     static char inputBuffer[256] = "";  // Buffer to hold the input text
@@ -406,9 +409,20 @@ void ChatApplication::Update(){
         ImGui::PopStyleVar(1);
         
         PushFont(FONT_PRIMARY);
-        ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).message.c_str());
+
+        // draw file
+        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).isFile){
+
+            // open file on click
+            if(ImGui::Button(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).filename.c_str())){
+                ClientSocket::OpenLinkInBrowser(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).fileURL.c_str());
+            }
+        }
+        else{ // draw message
+            ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].username, i).message.c_str());
+        }        
         PopFont();
-        
+
     }
 
     if(scroll){
@@ -424,6 +438,10 @@ void ChatApplication::Update(){
     // Add a separator and a text box at the bottom of the window
 
     ImGui::SetNextItemWidth(contentRegion.x);
+
+    if(ImGui::Button("Upload File")){
+        socket.SelectFile();
+    }
 
     if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
 

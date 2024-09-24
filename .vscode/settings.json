@@ -88,6 +88,9 @@
         "cwctype": "cpp",
         "resumable": "cpp",
         "numbers": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp"
     }
 }
