@@ -8,7 +8,10 @@
 
 #include "ServerSocket.h"
 #include "ServerHost.h"
-#include "HttpsServer.h"
+#include "Https.h"
+
+#include <asio.hpp>
+#include <asio/ssl.hpp>
 
 class Server {
 
@@ -27,14 +30,14 @@ class Server {
         ServerHost serverHost;
         std::thread hostThread;
 
-        HttpsServer httpsServer;
+        Https httpsServer;
         std::thread httpsThread;
+
+        asio::io_context io_context;
 
         std::list<ServerSocket> socketList;
         std::list<std::thread> threadList;
         std::list<std::string> addressList;
-
- 
 
         std::string address;
 };
