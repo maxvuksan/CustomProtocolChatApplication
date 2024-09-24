@@ -8,6 +8,7 @@
 
 #include "ServerSocket.h"
 #include "ServerHost.h"
+#include "HttpsServer.h"
 
 class Server {
 
@@ -25,6 +26,9 @@ class Server {
 
         ServerHost serverHost;
         std::thread hostThread;
+
+        HttpsServer httpsServer;
+        std::thread httpsThread;
 
         std::list<ServerSocket> socketList;
         std::list<std::thread> threadList;
