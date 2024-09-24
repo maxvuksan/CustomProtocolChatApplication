@@ -22,8 +22,9 @@ public:
                             std::vector<unsigned char>& plaintext);
 
     // RSA Encryption
-    int RSAEncryptOAEP(const std::string& publicKeyPEM, const unsigned char* data, size_t dataSize, unsigned char* encryptedData);
-    int RSADecryptOAEP(const std::string& privateKeyPEM, const unsigned char* encryptedData, size_t encryptedSize, unsigned char* decryptedData);
+    bool GenerateRSAKeyPair(std::string& publicKey, std::string& privateKey);
+    bool RSAEncrypt(const std::vector<unsigned char>& plaintext, const std::string& publicKey, std::vector<unsigned char>& ciphertext);
+    bool RSADecrypt(const std::vector<unsigned char>& ciphertext, const std::string& privateKey, std::vector<unsigned char>& plaintext);
 
     // RSA Signature
     int SignMessage(RSA* privateKey, const unsigned char* message, size_t messageLen, unsigned char* signature, size_t* signatureLen);

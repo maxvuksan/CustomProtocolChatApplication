@@ -304,6 +304,30 @@ int ClientSocket::SendChatMessage(string chatMessage) {
 
     cout << encryptor.VectorToString(decrypted_text) << endl;
 
+    std::string publicKey, privateKey;
+    if (!encryptor.GenerateRSAKeyPair(publicKey, privateKey)) {
+        std::cerr << "Failed to generate RSA key pair." << std::endl;
+        return 1;
+    }
+
+    plaintext = encryptor.StringToVector(chatMessage);
+
+    ciphertext = {};
+    if (!encryptor.RSAEncrypt(plaintext, publicKey, ciphertext)) {
+        std::cerr << "Encryption failed." << std::endl;
+        return 1;
+    }
+
+    cout << encryptor.VectorToString(ciphertext) << endl;
+
+    std::vector<unsigned char> decryptedText;
+    if (!encryptor.RSADecrypt(ciphertext, privateKey, decryptedText)) {
+        std::cerr << "Decryption failed." << std::endl;
+        return 1;
+    }
+
+    cout << encryptor.VectorToString(decryptedText) << endl;
+
     jsonMessage["type"] = "signed_data";
     jsonMessage["data"]["type"] = "chat";
     jsonMessage["counter"] = counter; // TEMP

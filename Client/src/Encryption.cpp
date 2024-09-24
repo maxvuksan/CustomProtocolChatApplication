@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <cstring>
 
 Encryption::Encryption() {
     // Constructor definition
@@ -24,12 +24,6 @@ std::vector<unsigned char> Encryption::StringToVector(const std::string& str) {
 std::string Encryption::VectorToString(const std::vector<unsigned char>& vec) {
     return std::string(vec.begin(), vec.end());
 }
-
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <iostream>
-#include <vector>
-#include <cstring>
 
 bool Encryption::AESEncrypt(const std::vector<unsigned char>& plaintext, const std::vector<unsigned char>& key,
                 std::vector<unsigned char>& ciphertext, std::vector<unsigned char>& iv, std::vector<unsigned char>& tag) {
@@ -144,3 +138,131 @@ bool Encryption::AESDecrypt(const std::vector<unsigned char>& ciphertext, const 
     return true;
 }
 
+bool Encryption::GenerateRSAKeyPair(std::string& publicKey, std::string& privateKey) {
+    int keyLength = 2048;
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    EVP_PKEY* pkey = NULL;
+    
+    if (!ctx || EVP_PKEY_keygen_init(ctx) <= 0 || 
+        EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, keyLength) <= 0 || 
+        EVP_PKEY_keygen(ctx, &pkey) <= 0) {
+        std::cerr << "Error generating RSA key pair." << std::endl;
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    // Write public key to a string
+    BIO* pub_bio = BIO_new(BIO_s_mem());
+    if (!PEM_write_bio_PUBKEY(pub_bio, pkey)) {
+        std::cerr << "Error writing public key." << std::endl;
+        BIO_free(pub_bio);
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    char* pub_key_data;
+    long pub_len = BIO_get_mem_data(pub_bio, &pub_key_data);
+    publicKey.assign(pub_key_data, pub_len);
+    BIO_free(pub_bio);
+
+    // Write private key to a string
+    BIO* priv_bio = BIO_new(BIO_s_mem());
+    if (!PEM_write_bio_PrivateKey(priv_bio, pkey, NULL, NULL, 0, NULL, NULL)) {
+        std::cerr << "Error writing private key." << std::endl;
+        BIO_free(priv_bio);
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    char* priv_key_data;
+    long priv_len = BIO_get_mem_data(priv_bio, &priv_key_data);
+    privateKey.assign(priv_key_data, priv_len);
+    BIO_free(priv_bio);
+
+    EVP_PKEY_free(pkey);
+    EVP_PKEY_CTX_free(ctx);
+    
+    return true;
+}
+
+bool Encryption::RSAEncrypt(const std::vector<unsigned char>& plaintext, const std::string& publicKey, std::vector<unsigned char>& ciphertext) {
+    // Load public key from string
+   BIO* pub_bio = BIO_new_mem_buf(publicKey.data(), -1);
+    EVP_PKEY* pkey = PEM_read_bio_PUBKEY(pub_bio, NULL, NULL, NULL);
+    BIO_free(pub_bio);
+
+    if (!pkey) {
+        std::cerr << "Error reading public key." << std::endl;
+        return false;
+    }
+
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+    if (!ctx || EVP_PKEY_encrypt_init(ctx) <= 0 || EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+        std::cerr << "Error initializing encryption context." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    size_t outlen;
+    if (EVP_PKEY_encrypt(ctx, NULL, &outlen, plaintext.data(), plaintext.size()) <= 0) {
+        std::cerr << "Error calculating encrypted size." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    ciphertext.resize(outlen);
+    if (EVP_PKEY_encrypt(ctx, ciphertext.data(), &outlen, plaintext.data(), plaintext.size()) <= 0) {
+        std::cerr << "Error during encryption." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    EVP_PKEY_free(pkey);
+    EVP_PKEY_CTX_free(ctx);
+    
+    return true;
+}
+
+bool Encryption::RSADecrypt(const std::vector<unsigned char>& ciphertext, const std::string& privateKey, std::vector<unsigned char>& plaintext) {
+    // Load private key from string
+    BIO* priv_bio = BIO_new_mem_buf(privateKey.data(), -1);
+    EVP_PKEY* pkey = PEM_read_bio_PrivateKey(priv_bio, NULL, NULL, NULL);
+    BIO_free(priv_bio);
+
+    if (!pkey) {
+        std::cerr << "Error reading private key." << std::endl;
+        return false;
+    }
+
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+    if (!ctx || EVP_PKEY_decrypt_init(ctx) <= 0 || EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+        std::cerr << "Error initializing decryption context." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    size_t outlen;
+    if (EVP_PKEY_decrypt(ctx, NULL, &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+        std::cerr << "Error calculating decrypted size." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    plaintext.resize(outlen);
+    if (EVP_PKEY_decrypt(ctx, plaintext.data(), &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+        std::cerr << "Error during decryption." << std::endl;
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    EVP_PKEY_free(pkey);
+    EVP_PKEY_CTX_free(ctx);
+    
+    return true;
+}
