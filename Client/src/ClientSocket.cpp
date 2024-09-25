@@ -6,6 +6,7 @@
 #include "Encryption.h"
 #include <mine/mine.h>
 #include <Windows.h>
+#include <filesystem>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <httplib.h>
@@ -139,6 +140,10 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
 
     httplib::Client cli(url.c_str());
 
+    // Disable SSL verification
+    cli.set_follow_location(true);
+    cli.enable_server_certificate_verification(false);
+
     // Open the file as binary
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
@@ -154,8 +159,13 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
 
     httplib::MultipartFormData data;
     data.name = "file";
+
+    // Extract the filename from the selected file path
+    std::filesystem::path filePath(filepath);
+    std::string filename = filePath.filename().string();
+
     data.content = file_data;
-    data.filename = filepath;
+    data.filename = filename;
     data.content_type = "application/octet-stream";
        
     items.push_back(data);
