@@ -15,4 +15,25 @@ Https::Https() {
 
 void Https::StartServer() {
     io_context.run();
+
+    // try {
+    //     asio::io_context ioContext;
+    //     asio::ssl::context sslContext(asio::ssl::context::sslv23);
+
+    //     sslContext.use_certificate_chain_file("-server.crt");
+    //     sslContext.use_private_key_file("server.key", asio::ssl::context::pem);
+
+    //     tcp::acceptor acceptor(ioContext, tcp::endpoint(tcp::v4(), 443));
+
+    //     while (true) {
+    //         tcp::socket socket(ioContext);
+    //         acceptor.accept(socket);
+    //         asio::ssl::stream<tcp::socket> sslSocket(move(socket), sslSocket);
+    //     }
+
+    // } catch (exception& e) {
+    //     cerr << e.what() << endl;
+    // }
+    
+    
 }

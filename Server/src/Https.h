@@ -9,8 +9,11 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 
+#include <json.hpp>
+
 using asio::ip::tcp;
 using namespace std;
+using Json = nlohmann::json;
 namespace fs = std::filesystem;
 
 class HttpsSession : public std::enable_shared_from_this<HttpsSession> {
@@ -41,42 +44,48 @@ private:
         socket_.async_read_some(asio::buffer(data_),
             [this, self](const asio::error_code& error, std::size_t length) {
                 if (!error) {
-                    
-                    string request(data_, length);
-                    if (is_file_upload(request)) {
-                        string fileName;
-                        string fileContent;
 
+                    string request(data_, length);
+
+                    if (request.find("POST /api/upload") != std::string::npos) {
+                        mode = "upload";
+                    }
+
+                    if (is_file_upload(request) && mode == "upload") {
                         string boundaryPrefix = "Content-Type: multipart/form-data; boundary=";
                         int pos = request.find(boundaryPrefix);
                         pos += boundaryPrefix.length();
                         int endPos = request.find("\r\n", pos);
-                        string boundary = request.substr(pos, endPos - pos);
-                        
-                        cout << boundary << endl;
+                        boundary = request.substr(pos, endPos - pos);
+                    } else if (mode == "upload") {
+                        string fileName;
+                        string fileContent;
 
                         int contentPos = request.find(boundary);
                         contentPos += boundary.length();
 
+                        int fileNamePos = request.find("filename=", contentPos) + 10;
+                        int fileNamePosEnd = request.find("\"", fileNamePos);
+                        fileName = request.substr(fileNamePos, fileNamePosEnd - fileNamePos);
+
+                        contentPos = request.find("\r\n\r\n", contentPos) + 4;
+
                         int contentPosEnd = request.find(boundary, contentPos);
-
-                        cout << contentPos << ", " << contentPosEnd << endl;
-
-
+                        contentPosEnd -= 3;
 
                         // Extract the part containing the file
-                        std::string file_part = request.substr(contentPos, contentPosEnd - contentPos);
-                        cout << file_part << endl;
+                        fileContent = request.substr(contentPos, contentPosEnd - contentPos);
 
-                       
                         save_file(fileName, fileContent);
                     }
 
-                    
 
 
                     do_write(length);
                 } else {
+
+                    
+
                     std::cerr << "Read failed: " << error.message() << std::endl;
                 }
             });
@@ -93,6 +102,25 @@ private:
         if (file) {
             file.write(file_content.data(), file_content.size());
             std::cout << "File saved: " << (path / file_name) << std::endl;
+
+            asio::error_code ec;
+            
+            string url;
+            url = "This is a url";
+
+            Json jsonResponse;
+            jsonResponse["response"]["body"]["file_url"] = url;
+
+            string responseString = jsonResponse.dump();
+            string responseHttp = "HTTP/1.1 200 OK\r\n"
+                               "Content-Type: application/json\r\n"
+                               "Content-Length: " + std::to_string(responseString.size()) + "\r\n"
+                               "\r\n" + responseString;
+
+            asio::write(socket_, asio::buffer(responseHttp), ec);
+
+
+
         } else {
             std::cerr << "Failed to save file: " << file_name << std::endl;
         }
@@ -188,8 +216,12 @@ private:
             });
     }
 
+    string boundary;
+    string mode = "";
+
     asio::ssl::stream<tcp::socket> socket_;
     char data_[1024];
+    
 };
 
 class HttpsServer {

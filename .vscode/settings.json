@@ -94,6 +94,9 @@
         "memory_resource": "cpp",
         "string_view": "cpp",
         "cinttypes": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "bitset": "cpp",
+        "set": "cpp",
+        "regex": "cpp"
     }
 }
