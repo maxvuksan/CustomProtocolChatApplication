@@ -135,7 +135,7 @@ void ClientSocket::SelectFile(){
 
 bool ClientSocket::UploadFileToServer(const std::string& filepath){
     
-    std::string url = "127.0.0.1:443";
+    std::string url = "https://127.0.0.1:443";
 
     httplib::Client cli(url.c_str());
 
@@ -164,6 +164,9 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
     auto res = cli.Post("/api/upload", items);
     if (res) {
         std::cout << "Response code: " << res->status << std::endl;
+        
+        std::cout << res->body << "\n";
+
         return res->status == 200; // Assuming 200 is the success status code
     } else {
         std::cerr << "Error: " << res.error() << std::endl;
