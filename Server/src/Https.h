@@ -79,9 +79,9 @@ private:
                         save_file(fileName, fileContent);
                     }
 
+                    do_read();
 
-
-                    do_write(length);
+                    // do_write(length);
                 } else {
 
                     
@@ -118,6 +118,12 @@ private:
                                "\r\n" + responseString;
 
             asio::write(socket_, asio::buffer(responseHttp), ec);
+
+            try {
+                socket_.shutdown();
+            } catch (const system_error& e) {
+                cerr << "Error" << e.what() << endl;
+            }
 
 
 
@@ -201,11 +207,6 @@ private:
 
     void do_write(std::size_t length) {
         auto self(shared_from_this());
-        std::string response = 
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 13\r\n\r\n"
-        "Hello, World!";
         asio::async_write(socket_, asio::buffer(data_, length),
             [this, self](const asio::error_code& error, std::size_t /*length*/) {
                 if (!error) {
