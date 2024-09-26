@@ -18,8 +18,8 @@ namespace fs = std::filesystem;
 
 class HttpsSession : public std::enable_shared_from_this<HttpsSession> {
 public:
-    HttpsSession(tcp::socket socket, asio::ssl::context& ssl_context)
-        : socket_(std::move(socket), ssl_context) {}
+    HttpsSession(tcp::socket socket, asio::ssl::context& ssl_context, string serverIp)
+        : socket_(std::move(socket), ssl_context) { ip = serverIp; }
 
     void start() {
         do_handshake();
@@ -106,7 +106,7 @@ private:
             asio::error_code ec;
             
             string url;
-            url = "This is a url";
+            url = "https://" + ip + ":443/" + file_name;
 
             Json jsonResponse;
             jsonResponse["response"]["body"]["file_url"] = url;
@@ -210,7 +210,7 @@ private:
         asio::async_write(socket_, asio::buffer(data_, length),
             [this, self](const asio::error_code& error, std::size_t /*length*/) {
                 if (!error) {
-                    do_read();
+                    // do_write();
                 } else {
                     std::cerr << "Write failed: " << error.message() << std::endl;
                 }
@@ -219,6 +219,7 @@ private:
 
     string boundary;
     string mode = "";
+    string ip;
 
     asio::ssl::stream<tcp::socket> socket_;
     char data_[1024];
@@ -227,9 +228,10 @@ private:
 
 class HttpsServer {
 public:
-    HttpsServer(asio::io_context& io_context, short port, asio::ssl::context& ssl_context)
+    HttpsServer(asio::io_context& io_context, short port, asio::ssl::context& ssl_context, string serverIp)
         : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
           ssl_context_(ssl_context) {
+        ip = serverIp;
         do_accept();
     }
 
@@ -242,11 +244,13 @@ private:
         acceptor_.async_accept(
             [this](const asio::error_code& error, tcp::socket socket) {
                 if (!error) {
-                    std::make_shared<HttpsSession>(std::move(socket), ssl_context_)->start();
+                    std::make_shared<HttpsSession>(std::move(socket), ssl_context_, ip)->start();
                 }
                 do_accept();
             });
     }
+
+    string ip;
 
     asio::io_context io_context;
     tcp::acceptor acceptor_;
@@ -255,12 +259,14 @@ private:
 
 class Https {
     public:
-        Https();
+        Https(string);
         void StartServer();
 
     private:
         HttpsServer * httpsServer;
         asio::io_context io_context;
         asio::ssl::context * ssl_context;
+
+        std::string ip;
 
 };

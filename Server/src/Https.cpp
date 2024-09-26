@@ -2,13 +2,15 @@
 
 using namespace std;
 
-Https::Https() {
+Https::Https(string serverIp) {
     
     ssl_context = new asio::ssl::context(asio::ssl::context::sslv23);
     ssl_context->use_certificate_chain_file("-server.crt");
     ssl_context->use_private_key_file("server.key", asio::ssl::context::pem);
 
-    httpsServer = new HttpsServer(io_context, std::atoi("443"), *ssl_context);
+    ip = serverIp;
+
+    httpsServer = new HttpsServer(io_context, std::atoi("443"), *ssl_context, ip);
 
     
 }

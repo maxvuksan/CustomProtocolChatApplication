@@ -12,6 +12,7 @@ int Server::StartServer() {
     string line;
     while (getline(file, line)) {
         address = line;
+        ip = line;
     }
     file.close();
 
@@ -29,7 +30,9 @@ int Server::StartServer() {
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
-    httpsThread = thread(&Https::StartServer, &httpsServer);
+
+    httpsServer = new Https(ip);
+    httpsThread = thread(&Https::StartServer, httpsServer);
 
 
     // Connect to servers in server list.txt
