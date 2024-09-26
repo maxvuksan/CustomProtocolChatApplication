@@ -6,6 +6,7 @@
 #include "Encryption.h"
 #include <mine/mine.h>
 #include <Windows.h>
+#include <filesystem>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <httplib.h>
@@ -135,9 +136,13 @@ void ClientSocket::SelectFile(){
 
 bool ClientSocket::UploadFileToServer(const std::string& filepath){
     
-    std::string url = "127.0.0.1:443";
+    std::string url = "https://127.0.0.1:443";
 
     httplib::Client cli(url.c_str());
+
+    // Disable SSL verification
+    cli.set_follow_location(true);
+    cli.enable_server_certificate_verification(false);
 
     // Open the file as binary
     std::ifstream file(filepath, std::ios::binary);
@@ -154,8 +159,13 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
 
     httplib::MultipartFormData data;
     data.name = "file";
+
+    // Extract the filename from the selected file path
+    std::filesystem::path filePath(filepath);
+    std::string filename = filePath.filename().string();
+
     data.content = file_data;
-    data.filename = filepath;
+    data.filename = filename;
     data.content_type = "application/octet-stream";
        
     items.push_back(data);
@@ -164,6 +174,9 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
     auto res = cli.Post("/api/upload", items);
     if (res) {
         std::cout << "Response code: " << res->status << std::endl;
+        
+        std::cout << res->body << "\n";
+
         return res->status == 200; // Assuming 200 is the success status code
     } else {
         std::cerr << "Error: " << res.error() << std::endl;
