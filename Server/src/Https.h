@@ -51,18 +51,27 @@ private:
                         mode = "upload";
                     }
 
+                    if (request.find("GET /download/") != std::string::npos) {
+                        mode = "download";
+                    }
+                    
+
                     if (is_file_upload(request) && mode == "upload") {
                         string boundaryPrefix = "Content-Type: multipart/form-data; boundary=";
                         int pos = request.find(boundaryPrefix);
                         pos += boundaryPrefix.length();
                         int endPos = request.find("\r\n", pos);
                         boundary = request.substr(pos, endPos - pos);
-                    } else if (mode == "upload") {
+
+                        do_read();
+                    } else if (mode == "upload" && startedContent == false) {
                         string fileName;
                         string fileContent;
 
+
                         int contentPos = request.find(boundary);
                         contentPos += boundary.length();
+                        startedContent = true;
 
                         int fileNamePos = request.find("filename=", contentPos) + 10;
                         int fileNamePosEnd = request.find("\"", fileNamePos);
@@ -71,20 +80,77 @@ private:
                         contentPos = request.find("\r\n\r\n", contentPos) + 4;
 
                         int contentPosEnd = request.find(boundary, contentPos);
-                        contentPosEnd -= 3;
+                        if (contentPosEnd != string::npos) {
+                            contentPosEnd -= 3;
+                            fileContent = request.substr(contentPos, contentPosEnd - contentPos);
+                            finishedReading = true;
+                        } else {
+                            fileContent = request.substr(contentPos);
+                        }
+                        
 
-                        // Extract the part containing the file
-                        fileContent = request.substr(contentPos, contentPosEnd - contentPos);
+                        fileName.erase(std::remove_if(fileName.begin(), fileName.end(), [](unsigned char c) {
+                            return std::isspace(c);
+                        }), fileName.end());
 
+                        savedFileName = fileName;
                         save_file(fileName, fileContent);
+
+                        if (finishedReading != true) {
+                            do_read();
+                        }
+                        
+                    }
+                    else if (mode == "upload" && startedContent == true) {
+
+                        string fileContent;
+
+                        int contentPosEnd = request.find(boundary);
+                        if (contentPosEnd != string::npos) {
+                            contentPosEnd -= 3;
+                            fileContent = request.substr(0, contentPosEnd);
+                            finishedReading = true;
+                        } else {
+                            fileContent = request;
+                        }
+
+                        save_file(savedFileName, fileContent);
+
+                        if (finishedReading != true) {
+                            do_read();
+                        }
                     }
 
-                    do_read();
+                    if (mode == "download") {
+                        int startPos = request.find("GET /download/");
+                        startPos += 14;
+                        int endPos = request.find("?", startPos);
 
-                    // do_write(length);
-                } else {
+                        string fileName = request.substr(startPos, endPos - startPos);
+
+                        fs::path path = "uploads"; 
+                        std::ifstream file(path / fileName, std::ios::binary);
+
+                        if (!file) {
+                            std::cerr << "Could not open file: " << fileName << std::endl;
+                            return;
+                        }
+
+                        file.seekg(0, std::ios::end);
+                        std::streamsize size = file.tellg();
+                        file.seekg(0, std::ios::beg);
+
+                        std::vector<char> buffer(size);
+                        if (file.read(buffer.data(), size)) {
+
+
+                            asio::error_code ec;
+                            asio::write(socket_, asio::buffer(buffer), ec);
+                        }
+                    }
 
                     
+                } else {
 
                     std::cerr << "Read failed: " << error.message() << std::endl;
                 }
@@ -95,18 +161,24 @@ private:
         // Save the file to a directory (ensure the directory exists)
         fs::path path = "uploads"; // Specify your upload directory
         fs::create_directories(path); // Create directory if it doesn't exist
-        std::ofstream file(path / file_name, std::ios::binary);
-
         
+        ofstream file;
+        if (writeCount == 0) {
+            file = ofstream(path / file_name, std::ios::binary);
+        } else {
+            file = ofstream(path / file_name, std::ios::binary | std::ios::app);
+        }
+        
+        writeCount++;
 
         if (file) {
             file.write(file_content.data(), file_content.size());
-            std::cout << "File saved: " << (path / file_name) << std::endl;
+            
 
             asio::error_code ec;
             
             string url;
-            url = "https://" + ip + ":443/" + file_name;
+            url = "https://" + ip + ":443/download/" + file_name;
 
             Json jsonResponse;
             jsonResponse["response"]["body"]["file_url"] = url;
@@ -117,12 +189,16 @@ private:
                                "Content-Length: " + std::to_string(responseString.size()) + "\r\n"
                                "\r\n" + responseString;
 
-            asio::write(socket_, asio::buffer(responseHttp), ec);
+            if (finishedReading) {
+                std::cout << "File saved: " << (path / file_name) << std::endl;
+                asio::write(socket_, asio::buffer(responseHttp), ec);
 
-            try {
-                socket_.shutdown();
-            } catch (const system_error& e) {
-                cerr << "Error" << e.what() << endl;
+                try {
+                    socket_.shutdown();
+                    socket_.lowest_layer().close();
+                } catch (const system_error& e) {
+                    cerr << "Error" << e.what() << endl;
+                }
             }
 
 
@@ -216,6 +292,11 @@ private:
                 }
             });
     }
+
+    int writeCount = 0;
+    bool startedContent = false;
+    bool finishedReading = false;
+    string savedFileName;
 
     string boundary;
     string mode = "";
