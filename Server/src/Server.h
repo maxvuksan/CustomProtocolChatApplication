@@ -30,7 +30,7 @@ class Server {
         ServerHost serverHost;
         std::thread hostThread;
 
-        Https httpsServer;
+        Https * httpsServer;
         std::thread httpsThread;
 
         asio::io_context io_context;
@@ -39,5 +39,6 @@ class Server {
         std::list<std::thread> threadList;
         std::list<std::string> addressList;
 
+        std::string ip;
         std::string address;
 };
