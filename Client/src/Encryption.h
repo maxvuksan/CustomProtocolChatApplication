@@ -33,6 +33,9 @@ public:
     // Key generation
     bool GenerateRSAKeyPair(int keySize, std::string& privateKeyFile, std::string& publicKeyPEM);
 
+    // fingerprint
+    bool CreateFingerprint(const std::string& publicKeyPEM, std::vector<unsigned char>& fingerprint);
+
     // helper functions
     std::vector<unsigned char> StringToVector(const std::string& str);
     std::string VectorToString(const std::vector<unsigned char>& vec);

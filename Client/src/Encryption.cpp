@@ -266,3 +266,45 @@ bool Encryption::RSADecrypt(const std::vector<unsigned char>& ciphertext, const 
     
     return true;
 }
+
+bool Encryption::CreateFingerprint(const std::string& publicKeyPEM, std::vector<unsigned char>& fingerprint)
+{
+    EVP_PKEY* publicKey = nullptr;
+    BIO* pub_bio = nullptr;
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    bool success = false;
+
+    pub_bio = BIO_new_mem_buf(publicKeyPEM.data(), -1);
+    if (!pub_bio) {
+        std::cerr << "Failed to create BIO for public key" << std::endl;
+        return false;
+    }
+
+    publicKey = PEM_read_bio_PUBKEY(pub_bio, nullptr, nullptr, nullptr);
+    BIO_free(pub_bio);
+
+    if (!publicKey) {
+        std::cerr << "Failed to load public key" << std::endl;
+        return false;
+    }
+
+    unsigned char* pubkey_der = nullptr;
+    int pubkey_len = i2d_PUBKEY(publicKey, &pubkey_der);
+
+    if (pubkey_len < 0 || !pubkey_der) {
+        std::cerr << "Failed to convert public key to DER format" << std::endl;
+    }
+
+    SHA256(pubkey_der, pubkey_len, hash);
+
+    fingerprint.assign(hash, hash + SHA256_DIGEST_LENGTH);
+    success = true;
+
+    EVP_PKEY_free(publicKey);
+    OPENSSL_free(pubkey_der);
+
+    return success;
+}
+
+
+

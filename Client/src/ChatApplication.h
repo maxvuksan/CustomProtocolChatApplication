@@ -48,10 +48,11 @@ class ChatApplication : public Program{
             @returns the index of a random colour
         */
         static int GetRandomColourIndex(){return rand() % colourVectorU32.size();}
-
-        static std::string GetPsuedoNameFromInt(int index){return pseudoNameVector[index % pseudoNameVector.size()];}
+        
+        static std::string GetPsuedoName(){return pseudoNameVector[rand() % pseudoNameVector.size()];}
 
     private:
+        std::string currentPseudoName;
 
         Client currentClient;
 

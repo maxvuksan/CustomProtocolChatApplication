@@ -3,7 +3,6 @@
 #include <iostream>
 #include <json.hpp>
 #include "ChatApplication.h"
-#include "Encryption.h"
 #include <mine/mine.h>
 #include <Windows.h>
 #include <filesystem>
@@ -18,69 +17,6 @@ using Json = nlohmann::json;
 void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr msg) {
     std::cout << "Received message: " << msg->get_payload() << std::endl;
     ParseMessage(msg->get_payload());
-}
-
-void ClientSocket::ParseMessage(const std::string& data){
-
-    Json json = Json::parse(data);
-    
-    string topmostType = json["type"];
-
-
-    if(topmostType == "signed_data"){
-
-        // handle data messages
-
-    }
-    if(topmostType == "client_list"){  
-
-        // TEMP : Clears the whole list of clients, should instead determine which clients should be updated and only update those
-
-        const std::vector<ActiveUsers>& activeUsers = client->GetActiveUsers();
-
-
-        // mark all the active users
-        for(int i = 0; i < activeUsers.size(); i++){
-            client->MarkClient(i, true);
-        }
-
-        
-        // update and unmark clients that we find
-
-        for(auto serverInput : json["servers"]){
-            
-            for(auto clientInput : serverInput["clients"]){
-
-                int index = client->GetClientIndex(clientInput);
-
-                if(index != -1){
-                    
-                    client->MarkClient(index, false);
-                } else{
-                    client->PushActiveUser(clientInput, serverInput["address"], false);
-                }
-            }
-        }
-
-        // remove self from active users
-        client->MarkClient(client->GetClientIndex(to_string(publicKey)), true);
-
-        // remove all the clients which are still marked
-        client->RemoveMarkedClients();
-
-
-        uniqueServerList.clear();
-
-        for(int i = 0; i < activeUsers.size(); i++){
-
-            // add if not found
-            if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) == uniqueServerList.end()){
-                uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
-            }
-        }
-
-    }
-
 }
 
 void ClientSocket::OpenLinkInBrowser(const std::string& url){
@@ -210,11 +146,23 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     Json helloMessage;
 
     srand(time(NULL));
-    publicKey = rand() % 99999;
+
+    if (!encryptor.GenerateRSAKeyPair(publicKey, privateKey)) {
+        std::cerr << "Failed to generate RSA key pair." << std::endl;
+        return;
+    }
+
+    std::vector<unsigned char> fingerprintVector;
+    if (!encryptor.CreateFingerprint(publicKey, fingerprintVector)) {
+        std::cerr << "Fingerprint failed." << std::endl;
+        return;
+    }
+
+    fingerprint = mine::Base64::encode(encryptor.VectorToString(fingerprintVector));
 
     helloMessage["type"] = "signed_data";
     helloMessage["data"]["type"] = "hello";
-    helloMessage["data"]["public_key"] = std::to_string(publicKey); // TEMP
+    helloMessage["data"]["public_key"] = publicKey;
     helloMessage["counter"] = counter;
     counter++;
 
@@ -276,20 +224,31 @@ void ClientSocket::End() {
     asioClient.close(global_hdl, websocketpp::close::status::normal, "Client closing connection");
 }
 
-int ClientSocket::SendChatMessage(string chatMessage) {
+int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
 
     // Creating json
     Json jsonMessage;
 
-    Encryption encryptor;
+    /*
+        private
+        data:
+        - type, destination_servers
+        - iv is base64 encoded
+        - symm_keys base64 encoded AES key, encrypted with RSA public key (for each recipient)
+        - chat base64 enocded AES encrypted segment
 
-    // Base64 Encoding Test
-    string testEncode = mine::Base64::encode(chatMessage);
-    cout << testEncode << endl;
-    string testDecode = mine::Base64::decode(testEncode);
-    cout << testDecode << endl;
+        chat:
+        - participants base64 encoded list of fingerprints of participants, starting with sender
+        - message - plaintext segment
 
-    // key, worry about storage later
+        public
+        data:
+        - type
+        - sender base64 encoded fingerprint of sender
+        - message plaintext message
+
+    */
+
     std::vector<unsigned char> key(32);
     if (!RAND_bytes(key.data(), key.size())) {
         std::cerr << "Error generating key." << std::endl;
@@ -303,53 +262,55 @@ int ClientSocket::SendChatMessage(string chatMessage) {
 
     // Encrypt the message
     if (!encryptor.AESEncrypt(plaintext, key, ciphertext, iv, tag)) {
-        std::cerr << "Encryption failed." << std::endl;
+        std::cerr << "AES Encryption failed." << std::endl;
+
+        return 1;
+    }
+    
+    string encodedIV = mine::Base64::encode(encryptor.VectorToString(iv));
+
+    string cipherTag = encryptor.VectorToString(ciphertext);
+    cipherTag += encryptor.VectorToString(tag);
+
+    string encodedCiphertext = mine::Base64::encode(cipherTag);
+
+    std::vector<unsigned char> RSAEncryptedAESKey;
+
+    if (!encryptor.RSAEncrypt(key, currentPublicKey, RSAEncryptedAESKey)) {
+        std::cerr << "RSA Encryption failed." << std::endl;
         return 1;
     }
 
-    cout << encryptor.VectorToString(ciphertext) << endl;
+    string encodedSymmKey = mine::Base64::encode(encryptor.VectorToString(RSAEncryptedAESKey));
 
-    std::vector<unsigned char> decrypted_text;
-    if (!encryptor.AESDecrypt(ciphertext, key, iv, tag, decrypted_text)) {
-        std::cerr << "Decryption failed." << std::endl;
+
+    // NEED FINGERPRINT OF BOTH THE SENDER AND RECIPIENT
+    std::vector<unsigned char> recipientFingerprint;
+    if (!encryptor.CreateFingerprint(publicKey, recipientFingerprint)) {
+        std::cerr << "Fingerprint failed." << std::endl;
         return 1;
     }
-
-    cout << encryptor.VectorToString(decrypted_text) << endl;
-
-    std::string publicKey, privateKey;
-    if (!encryptor.GenerateRSAKeyPair(publicKey, privateKey)) {
-        std::cerr << "Failed to generate RSA key pair." << std::endl;
-        return 1;
-    }
-
-    plaintext = encryptor.StringToVector(chatMessage);
-
-    ciphertext = {};
-    if (!encryptor.RSAEncrypt(plaintext, publicKey, ciphertext)) {
-        std::cerr << "Encryption failed." << std::endl;
-        return 1;
-    }
-
-    cout << encryptor.VectorToString(ciphertext) << endl;
-
-    std::vector<unsigned char> decryptedText;
-    if (!encryptor.RSADecrypt(ciphertext, privateKey, decryptedText)) {
-        std::cerr << "Decryption failed." << std::endl;
-        return 1;
-    }
-
-    cout << encryptor.VectorToString(decryptedText) << endl;
+    string encodedRecipientFingerprint = mine::Base64::encode(encryptor.VectorToString(recipientFingerprint));
 
     jsonMessage["type"] = "signed_data";
-    jsonMessage["data"]["type"] = "chat";
     jsonMessage["counter"] = counter; // TEMP
     jsonMessage["signature"] = "NEED TO DO"; // TEMP
 
+    jsonMessage["data"]["type"] = "chat";
     jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
+    jsonMessage["data"]["iv"] = encodedIV;
 
-    // Chat part
-    jsonMessage["data"]["chat"] = chatMessage;
+    jsonMessage["data"]["symm_keys"] = encodedSymmKey;
+
+    // Chat is base64 encoded, AES encrypted
+    jsonMessage["data"]["chat"]["message"] = encodedCiphertext;
+
+    try {
+        jsonMessage["data"]["chat"]["participants"] = nlohmann::json::array({fingerprint, encodedRecipientFingerprint});
+    } catch (const std::exception& e) {
+        cerr << "Setting participants failed: " << e.what() << endl;
+        return 1;
+    }
 
     asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
@@ -358,3 +319,141 @@ int ClientSocket::SendChatMessage(string chatMessage) {
     return 0;
 }
 
+void ClientSocket::ParseMessage(const std::string& data){
+
+    Encryption encryptor;
+    Json json = Json::parse(data);
+    
+    string topmostType = json["type"];
+
+    if(topmostType == "signed_data"){
+        // handle data messages
+        bool shouldDecode = false;
+        auto participants = json["data"]["chat"]["participants"];
+        for(size_t i = 1; i < participants.size(); i++){
+            try{
+                if(participants[i].get<std::string>() == fingerprint){
+                    shouldDecode = true;
+                }
+            } catch (const std::exception& e) {
+                cerr << "Fingerprint check failed: " << e.what() << endl;
+                return;
+            }
+        }
+
+        // MIGHT NEED TO BE !shouldDecode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // CHANGE???
+        if(shouldDecode){
+            cout << "Should not decode" << endl;
+            return;
+        }
+
+        string decodedCiphertext, decodedSymmKey, decodedIV;
+        try {
+            decodedCiphertext = mine::Base64::decode(json["data"]["chat"]["message"]);
+            decodedSymmKey = mine::Base64::decode(json["data"]["symm_keys"]);
+            decodedIV = mine::Base64::decode(json["data"]["iv"]);
+        } catch (const std::exception& e) {
+            cerr << "Base64 decoding failed: " << e.what() << endl;
+            return;
+        }
+
+        std::vector<unsigned char> decryptedSymmKey;
+        if (!encryptor.RSADecrypt(encryptor.StringToVector(decodedSymmKey), privateKey, decryptedSymmKey)) {
+            std::cerr << "RSA Decryption failed." << std::endl;
+            return;
+        }
+
+        string AESTag;
+        string ciphertext;
+        if (decodedCiphertext.size() >= 16) {
+            // Get the last 16 bytes
+            AESTag = decodedCiphertext.substr(decodedCiphertext.size() - 16);
+            ciphertext = decodedCiphertext.substr(0, decodedCiphertext.size() - 16);
+        } else {
+            std::cerr << "Ciphertext not long enough" << std::endl;
+            return;
+        }
+
+
+        std::vector<unsigned char> decryptedMessage;
+        if (!encryptor.AESDecrypt(encryptor.StringToVector(ciphertext), decryptedSymmKey, encryptor.StringToVector(decodedIV), encryptor.StringToVector(AESTag), decryptedMessage)) {
+            std::cerr << "AES Decryption failed." << std::endl;
+            return;
+        }
+        
+        client->PushMessage({encryptor.VectorToString(decryptedMessage), client->GetPseudoNameFromFingerprint(participants[0].get<std::string>()), chatApplication->GetCurrentDateTime(false)}, client->GetKeyFromFingerprint(participants[0].get<std::string>()));
+    }
+
+    if(topmostType == "client_list"){  
+        
+        // TEMP : Clears the whole list of clients, should instead determine which clients should be updated and only update those
+
+        const std::vector<ActiveUsers>& activeUsers = client->GetActiveUsers();
+
+
+        // mark all the active users
+        for(int i = 0; i < activeUsers.size(); i++){
+            client->MarkClient(i, true);
+        }
+
+        
+        // update and unmark clients that we find
+
+        for(auto serverInput : json["servers"]){
+            
+            for(auto clientInput : serverInput["clients"]){
+
+                int index = client->GetClientIndex(clientInput);
+
+                if(index != -1){
+                    
+                    client->MarkClient(index, false);
+                } else{
+                    client->PushActiveUser(clientInput, serverInput["address"], false);
+                }
+            }
+        }
+
+        // remove self from active users
+        client->MarkClient(client->GetClientIndex(publicKey), true);
+
+        // remove all the clients which are still marked
+        client->RemoveMarkedClients();
+
+
+        uniqueServerList.clear();
+
+        for(int i = 0; i < activeUsers.size(); i++){
+
+            // add if not found
+            if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) == uniqueServerList.end()){
+                uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
+            }
+        }
+
+    }
+
+
+}
+
+
+//  std::string publicKey, privateKey;
+//     if (!encryptor.GenerateRSAKeyPair(publicKey, privateKey)) {
+//         std::cerr << "Failed to generate RSA key pair." << std::endl;
+//         return 1;
+//     }
+
+//     plaintext = encryptor.StringToVector(chatMessage);
+
+//     ciphertext = {};
+//     if (!encryptor.RSAEncrypt(plaintext, publicKey, ciphertext)) {
+//         std::cerr << "Encryption failed." << std::endl;
+//         return 1;
+//     }
+
+//     std::vector<unsigned char> decryptedText;
+//     if (!encryptor.RSADecrypt(ciphertext, privateKey, decryptedText)) {
+//         std::cerr << "Decryption failed." << std::endl;
+//         return 1;
+//     }

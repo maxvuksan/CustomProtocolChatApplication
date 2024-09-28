@@ -49,6 +49,8 @@ class Client {
         void PushMessage(ChatMessage message, std::string user);
         int UpdateDate(std::string user, std::string date, std::string selectedUser);
         int GetColourIndex(std::string user);
+        std::string GetKeyFromFingerprint(std::string fingerprint);
+        std::string GetPseudoNameFromFingerprint(std::string fingerprint);
 
     private:
         void ParseMessage(std::string currentUser, ChatMessage currentMessage);

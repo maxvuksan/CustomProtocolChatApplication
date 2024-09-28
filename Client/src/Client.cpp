@@ -1,12 +1,13 @@
 #include "Client.h"
 #include <algorithm>
 #include "ChatApplication.h"
+#include "Encryption.h"
 
 Client::Client(){
     allMessages.clear();
     activeUsers.clear();
 
-    activeUsers = {{" ", "", 1}};
+    activeUsers = {{"", "", "", "", 1}};
 
     std::vector<ChatMessage> messages1 = {};
 
@@ -57,14 +58,29 @@ const ChatMessage& Client::GetChatMessage(std::string currentUser, int index){
 
 void Client::PushActiveUser(std::string username, std::string serverOfOrigin, bool marked)
 {   
-    this->activeUsers.push_back(ActiveUsers({username, "0", ChatApplication::GetRandomColourIndex(), serverOfOrigin, marked}));
+    // Generate Pseudoname
+    ChatApplication *chatApplication;
+    Encryption *encryptor;
+    std::string pseudoName = chatApplication->GetPsuedoName();
+
+
+    // Create fingerprint from public key
+    std::vector<unsigned char> fingerprintVector;
+    if (!encryptor->CreateFingerprint(username, fingerprintVector)) {
+        std::cerr << "Fingerprint failed." << std::endl;
+        return;
+    }
+
+    std::string fingerprint = mine::Base64::encode(encryptor->VectorToString(fingerprintVector));
+
+    this->activeUsers.push_back(ActiveUsers({username, pseudoName, fingerprint, "0", ChatApplication::GetRandomColourIndex(), serverOfOrigin, marked}));
 }
 
 int Client::GetColourIndex(std::string user){
 
     for(int i = 0; i < activeUsers.size(); i++){
 
-        if(activeUsers[i].username == user){
+        if(activeUsers[i].pseudoName == user){
             return activeUsers[i].colourIndex;
         }
 
@@ -85,7 +101,7 @@ const std::vector<ActiveUsers>& Client::GetActiveUsers(){
 int Client::GetClientIndex(std::string username){
 
     for(int i = 0; i < activeUsers.size(); i++){
-        if(activeUsers[i].username == username){
+        if(activeUsers[i].publicKey == username){
             return i;
         }
     }
@@ -99,10 +115,32 @@ void Client::PushMessage(ChatMessage currentMessage, std::string currentUser){
     return;
 }
 
+std::string Client::GetKeyFromFingerprint(std::string fingerprint){
+
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].fingerprint == fingerprint){
+            return activeUsers[i].publicKey;
+        }
+    }
+
+    return "";
+}
+
+std::string Client::GetPseudoNameFromFingerprint(std::string fingerprint){
+
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].fingerprint == fingerprint){
+            return activeUsers[i].pseudoName;
+        }
+    }
+
+    return "";
+}
+
 int Client::UpdateDate(std::string user, std::string date, std::string selectedUser){
 
     for(int i = 0; i < activeUsers.size(); i++){
-        if(activeUsers[i].username == user){
+        if(activeUsers[i].publicKey == user){
             activeUsers[i].mostRecentMessage = date;
         }
     }
@@ -115,7 +153,7 @@ int Client::UpdateDate(std::string user, std::string date, std::string selectedU
     int index = 0;
 
     for(int i = 0; i < activeUsers.size(); i++){
-        if(activeUsers[i].username == selectedUser){
+        if(activeUsers[i].publicKey == selectedUser){
             index = i;
         }
     }
@@ -123,14 +161,14 @@ int Client::UpdateDate(std::string user, std::string date, std::string selectedU
     return index;
 }
 
-
+// ARE THESE USED???
 void Client::UserLeave(std::string user){
     // remove user from 'activeUsers' and 'allMessages' map
     allMessages.erase(user);
 
     for(int i = 0; i < activeUsers.size(); i++){
         
-        if(activeUsers[i].username == user){
+        if(activeUsers[i].publicKey == user){
             activeUsers.erase (activeUsers.begin()+i);
         }
     }

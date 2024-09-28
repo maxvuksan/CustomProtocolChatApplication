@@ -3,7 +3,10 @@
 
 struct ActiveUsers{
     
-    std::string username;
+    // public key
+    std::string publicKey;
+    std::string pseudoName;
+    std::string fingerprint;
     std::string mostRecentMessage;
 
     int colourIndex;
