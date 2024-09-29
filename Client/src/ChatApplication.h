@@ -44,12 +44,20 @@ class ChatApplication : public Program{
 
         void SetConnectedState(ConnectedState state){this->connectedState = state;}
 
+        void SetCurrentPseudoName(std::string name){this->currentPseudoName = name;}
+
         /*
             @returns the index of a random colour
         */
         static int GetRandomColourIndex(){return rand() % colourVectorU32.size();}
         
         static std::string GetPsuedoName(){return pseudoNameVector[rand() % pseudoNameVector.size()];}
+
+        static std::string GetPsuedoNameExtractedFromKey(std::string publicKey);
+        static int GetRandomColourIndexExtractedFromKey(std::string publicKey);
+
+        // @returns the index of the selected active user
+        int GetSelectedUser(){return selectedUser;}
 
     private:
         std::string currentPseudoName;

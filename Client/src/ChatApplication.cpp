@@ -30,7 +30,7 @@ void ChatApplication::Start(){
     Configure_PseudoNameList();
     Configure_FontList();
     selectedUser = 0;
-    currentPseudoName = GetPsuedoName();
+    currentPseudoName = "PESUDO NAME NOT SET YET"; // GetPsuedoName();
     connectedState = CS_DISCONNECTED;
 
     socket.SetChatApplication(this);
@@ -117,6 +117,46 @@ void ChatApplication::PopFont(){
     ImGui::PopFont();
     ImGui::PopStyleColor(1);
 }
+
+std::string ChatApplication::GetPsuedoNameExtractedFromKey(std::string publicKey){
+
+    // assuming grabbing indicies wont break the key 
+
+    int sum = 0;
+
+    // picks 10 characters from the middle of the public key 
+    for(int i = 100; i < 110; i++){
+
+        if(i < publicKey.length()){
+            sum += (int)publicKey[i];
+        }
+        else{
+            std::cout << "Provided public key is an invalid length, ChatApplication::GetPseudoNameExtractedFromKey\n";
+            break;
+        }
+    }   
+
+    return pseudoNameVector[sum % pseudoNameVector.size()];
+}
+
+int ChatApplication::GetRandomColourIndexExtractedFromKey(std::string publicKey){
+
+    int sum = 0;
+
+    for(int i = 100; i < 110; i++){
+
+        if(i < publicKey.length()){
+            sum += (int)publicKey[i];
+        }
+        else{
+            std::cout << "Provided public key is an invalid length, ChatApplication::GetRandomColourIndexExtractedFromKey\n";
+            break;
+        }
+    }   
+
+    return sum % colourVectorU32.size();
+}
+
 
 std::string ChatApplication::GetCurrentDateTime(bool forUser){
     // Get current time
@@ -419,6 +459,7 @@ void ChatApplication::Update(){
             if(ImGui::Button(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).filename.c_str())){
                 ClientSocket::OpenLinkInBrowser(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).fileURL.c_str());
             }
+
         }
         else{ // draw message
             ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).message.c_str());

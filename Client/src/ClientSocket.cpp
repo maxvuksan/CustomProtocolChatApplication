@@ -19,7 +19,15 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
     ParseMessage(msg->get_payload());
 }
 
-void ClientSocket::OpenLinkInBrowser(const std::string& url){
+void ClientSocket::OpenLinkInBrowser(std::string url){
+
+    // append ? at end of URL
+    // Check if the URL already has a question mark
+    if (url.find('?') == std::string::npos) {
+        url += "?";  // Append ? only if not present
+    };
+
+
     // This is platform-specific. Adjust based on your OS.
     #ifdef _WIN32
         ShellExecuteA(0, 0, url.c_str(), 0, 0, SW_SHOW);
@@ -31,8 +39,7 @@ void ClientSocket::OpenLinkInBrowser(const std::string& url){
         system(command.c_str());
     #endif
 
-    std::cout << "Opening URL...\n";
-
+    std::cout << "Opening URL: " << url << "\n";
 }
 
 void ClientSocket::SelectFile(){
@@ -112,6 +119,20 @@ bool ClientSocket::UploadFileToServer(const std::string& filepath){
         std::cout << "Response code: " << res->status << std::endl;
         
         std::cout << res->body << "\n";
+        Json json = Json::parse(res->body);
+
+        // send to recipiant
+        SendChatMessage(json["response"]["body"]["file_url"], client->GetActiveUsers()[chatApplication->GetSelectedUser()].publicKey);
+
+        // send to self
+        ChatMessage messageToSelf;
+        messageToSelf.date = chatApplication->GetCurrentDateTime(false);
+        messageToSelf.sentBy = "me (" + chatApplication->GetPsuedoNameExtractedFromKey(publicKey) + ")";
+        messageToSelf.filename = filename;
+        messageToSelf.fileURL = json["response"]["body"]["file_url"];
+        messageToSelf.isFile = true;
+        client->PushMessage(messageToSelf, client->GetActiveUsers()[chatApplication->GetSelectedUser()].publicKey);
+
 
         return res->status == 200; // Assuming 200 is the success status code
     } else {
@@ -174,6 +195,8 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
     asioClient.send(global_hdl, to_string(clientListMessage), websocketpp::frame::opcode::text);
 
+    // set our own psuedo name
+    chatApplication->SetCurrentPseudoName(ChatApplication::GetPsuedoNameExtractedFromKey(publicKey));
     chatApplication->SetConnectedState(CS_CONNECTED);
 }
 
@@ -382,7 +405,36 @@ void ClientSocket::ParseMessage(const std::string& data){
             return;
         }
         
-        client->PushMessage({encryptor.VectorToString(decryptedMessage), client->GetPseudoNameFromFingerprint(participants[0].get<std::string>()), chatApplication->GetCurrentDateTime(false)}, client->GetKeyFromFingerprint(participants[0].get<std::string>()));
+
+        ChatMessage chatMessage({encryptor.VectorToString(decryptedMessage), client->GetPseudoNameFromFingerprint(participants[0].get<std::string>()), chatApplication->GetCurrentDateTime(false)});
+
+        
+        // handling file download URLS
+
+        //e.g.      https://127.0.0.1:443/download/FILE.EXT
+
+        // is the message prefixed with https?
+
+        std::cout << chatMessage.message.substr(0, 8) << "\n";
+
+        if(chatMessage.message.substr(0, 8) == "https://"){
+
+            int endSectionIndex = chatMessage.message.find_last_of('/');
+            int downloadSectionIndex = chatMessage.message.substr(0, endSectionIndex).find_last_of('/');
+
+            std::cout << chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) << "\n";
+
+            if(chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) == "/download"){
+                
+                chatMessage.filename = chatMessage.message.substr(endSectionIndex + 1, chatMessage.message.length());
+                chatMessage.isFile = true;
+                chatMessage.fileURL = chatMessage.message;
+            }
+        }
+
+
+        
+        client->PushMessage(chatMessage, client->GetKeyFromFingerprint(participants[0].get<std::string>()));
     }
 
     if(topmostType == "client_list"){  
