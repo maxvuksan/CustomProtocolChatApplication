@@ -21,6 +21,18 @@ void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
     jsonHello["type"] = "signed_data";
     jsonHello["data"]["type"] = "server_hello";
     jsonHello["data"]["sender"] = hostAddress;
+    jsonHello["counter"] = counter;
+
+    vector<unsigned char> fingerprintVector;
+    if (!encryptor.CreateFingerprint(publicKey, fingerprintVector)) {
+        cerr << "Fingerprint failed" << endl;
+    }
+
+    string fingerprint = mine::Base64::encode(encryptor.VectorToString(fingerprintVector));
+
+    jsonHello["signature"] = fingerprint;
+
+    counter++;
 
     SendJson(jsonHello);
 
@@ -32,7 +44,7 @@ void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
 }
 
 void ServerSocket::OnFail(websocketpp::connection_hdl hdl) {
-    ConnectToServer(connectionAddress, hostAddress);
+    ConnectToServer(connectionAddress, hostAddress, publicKey);
 }
 
 void ServerSocket::OnClose(websocketpp::connection_hdl hdl) {
@@ -54,9 +66,10 @@ ServerSocket::ServerSocket() {
 
 }
 
-void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
+void ServerSocket::ConnectToServer(string dstIp, string srcAddress, string key) {
 
     hostAddress = srcAddress;
+    publicKey = key;
     connectionAddress = dstIp;
 
     websocketpp::lib::error_code ec; 
@@ -64,6 +77,21 @@ void ServerSocket::ConnectToServer(string dstIp, string srcAddress) {
     cout << "Attempting to connect to server with ip: " << dstIp << endl;
 
     string address = "wss://" + dstIp;
+
+    // Set TLS init handler
+    client.set_tls_init_handler([](websocketpp::connection_hdl) -> std::shared_ptr<asio::ssl::context> {
+        std::shared_ptr<asio::ssl::context> ctx = std::make_shared<asio::ssl::context>(asio::ssl::context::tlsv12);
+
+        try {
+            
+            ctx->set_verify_mode(asio::ssl::verify_none);  // Disable verification for certificates (we are using self signed certificates)
+            
+        } catch (std::exception& e) {
+            std::cerr << "Error setting up TLS: " << e.what() << std::endl;
+        }
+
+        return ctx;
+    });
 
     Client::connection_ptr con = client.get_connection(address, ec);
 
