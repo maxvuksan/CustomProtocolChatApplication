@@ -4,6 +4,11 @@ using namespace std;
 
 int Server::StartServer() {
 
+    if (!encryption.GenerateRSAKeyPair(publicKey, privateKey)) {
+        cerr << "Failed to generate RSA key pair" << endl;
+    }
+    cout << publicKey << ", " << privateKey << endl;
+
     ifstream file("Server Properties.txt");
     if (!file.is_open()) {
         return -1;
@@ -29,7 +34,7 @@ int Server::StartServer() {
 
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
-    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address);
+    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address, publicKey);
 
     httpsServer = new Https(ip);
     httpsThread = thread(&Https::StartServer, httpsServer);
@@ -111,7 +116,7 @@ int Server::ConnectToServer(string dstIp) {
     addressList.push_back(dstIp);
 
     ServerSocket & lastSocket = socketList.back(); 
-    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), dstIp, address);
+    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), dstIp, address, publicKey);
     
     return 0;
 }

@@ -27,6 +27,7 @@ client: FORCE
 # Server ------------------------------------------------------------------------------------------------
 
 SERVER_SRCS = ./Server/src/*.cpp \
+		./include/mine/mine.cc \
 
 # Compile and link in one step
 server: FORCE

@@ -5,18 +5,20 @@
 #include <thread>
 #include <unistd.h>
 
-#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
 
 #include <json.hpp> 
 
-typedef websocketpp::client<websocketpp::config::asio_client> Client;
+#include "Encryption.h"
+
+typedef websocketpp::client<websocketpp::config::asio_tls_client> Client;
 
 class ServerSocket {
 
     public:
     
-        void ConnectToServer(std::string, std::string);
+        void ConnectToServer(std::string, std::string, std::string);
         void SendJson(nlohmann::json);
         bool IsConnected();
 
@@ -39,4 +41,9 @@ class ServerSocket {
         std::string hostAddress;
 
         bool connected;
+        int counter = 0;
+
+        std::string publicKey;
+
+        Encryption encryptor;
 };

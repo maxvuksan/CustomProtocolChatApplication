@@ -9,6 +9,7 @@
 #include "ServerSocket.h"
 #include "ServerHost.h"
 #include "Https.h"
+#include "Encryption.h"
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
@@ -41,4 +42,9 @@ class Server {
 
         std::string ip;
         std::string address;
+
+        std::string privateKey;
+        std::string publicKey;
+
+        Encryption encryption;
 };

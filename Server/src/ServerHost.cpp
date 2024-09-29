@@ -28,6 +28,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     type = json["data"]["type"];
+    // cout << json["counter"] << endl;
 
     if (type == "hello") {
         string publicKey = json["data"]["public_key"];
@@ -35,6 +36,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "server_hello") {
+        // cout << json["signature"] << endl;
         AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
@@ -48,6 +50,10 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
 
+}
+
+bool ServerHost::CheckServerSignature(string hash) {
+    
 }
 
 void ServerHost::OnClose(websocketpp::connection_hdl connection) {
@@ -232,11 +238,11 @@ void ServerHost::UpdateExternalClientList(websocketpp::connection_hdl connection
     SendAllClientListsToAllClients();
 }
 
-void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string address) {
+void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string address, string key) {
     try {
-
         // Create a server endpoint
         serverSockets = socketList;
+        publicKey = key;
 
         // Set logging settings (optional)
         server.set_access_channels(websocketpp::log::alevel::all);
@@ -248,6 +254,30 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string a
 
         // Set the listening port
         server.init_asio();
+
+        // Set up TLS
+        string certificateFile = "-server.crt";
+        string keyFile = "server.key";
+        server.set_tls_init_handler([certificateFile, keyFile](websocketpp::connection_hdl hdl) -> shared_ptr<asio::ssl::context> {
+            std::shared_ptr<asio::ssl::context> ctx = make_shared<asio::ssl::context>(asio::ssl::context::tlsv12);
+
+            try {
+                ctx->set_options(asio::ssl::context::default_workarounds |
+                                 asio::ssl::context::no_sslv2 |
+                                 asio::ssl::context::no_sslv3 |
+                                 asio::ssl::context::single_dh_use);
+
+                ctx->use_certificate_chain_file(certificateFile);
+                ctx->use_private_key_file(keyFile, asio::ssl::context::pem);
+            } catch (exception& e) {
+                cerr << "Couldn't set up TLS: " << e.what() << endl;
+            } 
+
+            return ctx;
+        });
+
+        
+
         server.listen(port);
         server.start_accept();
 

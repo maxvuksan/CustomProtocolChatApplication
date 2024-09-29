@@ -2,7 +2,7 @@
 
 #include "iostream"
 
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
 
 #include "ServerSocket.h"
@@ -10,7 +10,7 @@
 #include <json.hpp>
 #include <list>
 
-typedef websocketpp::server<websocketpp::config::asio> server_type;
+typedef websocketpp::server<websocketpp::config::asio_tls> server_type;
 
 struct ClientList {
     std::string address;
@@ -21,7 +21,7 @@ struct ClientList {
 class ServerHost {
 
     public:
-        void StartServer(int, std::list<ServerSocket> *, std::string);
+        void StartServer(int, std::list<ServerSocket> *, std::string, std::string);
         void Callback_OnMessage(websocketpp::connection_hdl connection_hdl, server_type::message_ptr message);
 
     private:
@@ -40,6 +40,8 @@ class ServerHost {
         void SendChatMessage(nlohmann::json, nlohmann::json);
         void SendPublicChatMessage(nlohmann::json);
 
+        bool CheckServerSignature(std::string);
+
         std::list<std::string> clientList;
         std::list<websocketpp::connection_hdl> clientConnections;
 
@@ -47,6 +49,7 @@ class ServerHost {
         std::list<ClientList> externalClientLists;
 
         std::string myAddress;
+        std::string publicKey;
 
         server_type server;
 };
