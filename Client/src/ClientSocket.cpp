@@ -162,7 +162,6 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
     // Example: Send a message to the server right after the connection opens
     websocketpp::lib::error_code ec;
     
-
     // Creating json 
     Json helloMessage;
 
