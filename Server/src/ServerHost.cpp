@@ -36,7 +36,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "server_hello") {
-        // cout << json["signature"] << endl;
+        CheckServerSignature(json["signature"]);
         AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
@@ -53,7 +53,9 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
 }
 
 bool ServerHost::CheckServerSignature(string hash) {
-    
+    cout << hash << endl;
+
+    return false;
 }
 
 void ServerHost::OnClose(websocketpp::connection_hdl connection) {

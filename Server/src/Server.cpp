@@ -3,12 +3,6 @@
 using namespace std;
 
 int Server::StartServer() {
-
-    if (!encryption.GenerateRSAKeyPair(publicKey, privateKey)) {
-        cerr << "Failed to generate RSA key pair" << endl;
-    }
-    cout << publicKey << ", " << privateKey << endl;
-
     ifstream file("Server Properties.txt");
     if (!file.is_open()) {
         return -1;
@@ -31,6 +25,9 @@ int Server::StartServer() {
     cin >> port;
 
     address += ":" + to_string(port);
+
+    GetRSAKeys(ip, port);
+    cout << publicKey << endl;
 
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
@@ -60,6 +57,76 @@ int Server::StartServer() {
     }
 
     return 0;
+}
+
+void Server::GetRSAKeys(std::string ip, int port) {
+
+    ifstream file(ip + ".." + to_string(port) + "Keys.txt");
+    if (!file.is_open()) {
+        if (!encryption.GenerateRSAKeyPair(publicKey, privateKey)) {
+            cerr << "Failed to generate RSA key pair" << endl;
+        }
+
+        string fileDest = ip + ".." + to_string(port) + "Keys.txt";
+        ofstream outFile(fileDest);
+        if (outFile.is_open()) {
+            outFile << publicKey;
+            outFile << privateKey;
+
+            outFile.close();
+        } else {
+            cerr << "Unable to save keys to file" << endl;
+        }
+
+        return;
+    }
+
+    string line;
+    bool gettingPublicKey = false;
+    bool gettingPrivateKey = false;
+    privateKey = "";
+    publicKey = "";
+    while (getline(file, line)) {
+        if (line.find("-----BEGIN PUBLIC KEY-----") != -1) {
+            gettingPublicKey = true;
+            publicKey += line;
+            publicKey += "\n";
+            continue;
+        }
+
+        if (line.find("-----END PUBLIC KEY-----") != -1) {
+            gettingPublicKey = false;
+            publicKey += line;
+            publicKey += "\n";
+            continue;
+        }
+
+        if (line.find("-----BEGIN PRIVATE KEY-----") != -1) {
+            gettingPrivateKey = true;
+            privateKey += line;
+            continue;
+        }
+
+        if (line.find("-----END PRIVATE KEY-----") != -1) {
+            gettingPrivateKey = false;
+            privateKey += line;
+            continue;
+        }
+
+        if (gettingPublicKey == true) {
+            publicKey += line;
+            publicKey += "\n";
+        }
+
+        if (gettingPrivateKey == true) {
+            privateKey += line;
+            privateKey += "\n";
+        }
+    }
+    file.close();
+
+
+    
 }
 
 void Server::CommandManager(string command) {

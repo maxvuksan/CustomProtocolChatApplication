@@ -27,6 +27,7 @@ class Server {
     private:
         void RemoveSocketAt(int);
         void CheckSocketStatus();
+        void GetRSAKeys(std::string, int);
 
         ServerHost serverHost;
         std::thread hostThread;
