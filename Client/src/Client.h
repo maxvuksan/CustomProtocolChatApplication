@@ -39,10 +39,10 @@ class Client {
         void ClearActiveUsers(){activeUsers.clear();}
 
         /*
-            @param username display name for the client (will generally be the public key)
+            @param publicKey 
             @param serverOfOrigin where is this client from? formatted "ip:port"
         */
-        void PushActiveUser(std::string username, std::string serverOfOrigin, bool marked = false);
+        void PushActiveUser(std::string publicKey, std::string serverOfOrigin, bool marked = false);
 
         void UserLeave(std::string user);
         void UserJoin(std::string user);

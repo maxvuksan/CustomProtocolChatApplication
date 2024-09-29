@@ -61,7 +61,7 @@ void Client::PushActiveUser(std::string username, std::string serverOfOrigin, bo
     // Generate Pseudoname
     ChatApplication *chatApplication;
     Encryption *encryptor;
-    std::string pseudoName = chatApplication->GetPsuedoName();
+    std::string pseudoName = chatApplication->GetPsuedoNameExtractedFromKey(username);
 
 
     // Create fingerprint from public key
@@ -73,7 +73,7 @@ void Client::PushActiveUser(std::string username, std::string serverOfOrigin, bo
 
     std::string fingerprint = mine::Base64::encode(encryptor->VectorToString(fingerprintVector));
 
-    this->activeUsers.push_back(ActiveUsers({username, pseudoName, fingerprint, "0", ChatApplication::GetRandomColourIndex(), serverOfOrigin, marked}));
+    this->activeUsers.push_back(ActiveUsers({username, pseudoName, fingerprint, "0", ChatApplication::GetRandomColourIndexExtractedFromKey(username), serverOfOrigin, marked}));
 }
 
 int Client::GetColourIndex(std::string user){

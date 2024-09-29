@@ -29,7 +29,7 @@ class ClientSocket {
         void OnClose(websocketpp::connection_hdl hdl);
         void OnOpen(websocketpp::connection_hdl hdl);
 
-        static void OpenLinkInBrowser(const std::string& url);
+        static void OpenLinkInBrowser(std::string url);
         void SelectFile();
         bool UploadFileToServer(const std::string& filepath);
 
