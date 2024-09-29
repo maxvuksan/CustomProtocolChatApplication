@@ -27,7 +27,6 @@ int Server::StartServer() {
     address += ":" + to_string(port);
 
     GetRSAKeys(ip, port);
-    cout << publicKey << endl;
 
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
