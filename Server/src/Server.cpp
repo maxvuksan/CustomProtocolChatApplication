@@ -178,11 +178,13 @@ int Server::ConnectToServer(string dstIp) {
         return -3;
     }
 
-    socketList.emplace_back();
+    //socketList.emplace_back();
     addressList.push_back(dstIp);
 
-    ServerSocket & lastSocket = socketList.back(); 
-    threadList.emplace_back(&ServerSocket::ConnectToServer, socketList.rbegin(), dstIp, address, publicKey);
+    //ServerSocket & lastSocket = socketList.back(); 
+
+    socketList.emplace_back();
+    threadList.emplace_back(&ServerSocket::ConnectToServer, &socketList.back(), dstIp, address, publicKey);
     
     return 0;
 }

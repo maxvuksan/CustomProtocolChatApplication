@@ -9,13 +9,17 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     Json json = Json::parse(msg->get_payload());
     string type = json["type"];
 
+    cout << "Recieved a message from a client" << endl;
+    cout << json << endl;
+
     // Unsigned data
     if (type == "client_update") {
+        
         UpdateExternalClientList(hdl, json["clients"]);
     }
 
     if (type == "client_list_request") {
-        
+        cout << "Sending client list" << endl;
         SendAllClientLists(hdl);
     }
 
@@ -126,35 +130,66 @@ bool ServerHost::CheckServerSignature(string hash) {
 void ServerHost::OnClose(websocketpp::connection_hdl connection) {
 
     // Client section
+    list<list<string>::iterator> clientListRemove = list<list<string>::iterator>();
+    list<list<websocketpp::connection_hdl>::iterator> clientConnectionsRemove = list<list<websocketpp::connection_hdl>::iterator>();
     list<string>::iterator il = clientList.begin();
     for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
-        if (connection.owner_before(*it) || it->owner_before(connection)) {
+        // if (connection.owner_before(*it) || it->owner_before(connection)) {
+        //     continue;
+        // }
+
+        if (connection.lock() != it->lock()) {
             continue;
         }
         
-        clientConnections.erase(it);
-        clientList.erase(il);
-
-        SendClientUpdate();
-        SendAllClientListsToAllClients();
+        clientListRemove.push_back(il);
+        clientConnectionsRemove.push_back(it);
 
         il++;
     }
 
+    for (list<list<string>::iterator>::iterator it = clientListRemove.begin(); it != clientListRemove.end(); it++) {
+        clientList.erase(*it);
+    }
+    clientListRemove.clear();
+
+    for (list<list<websocketpp::connection_hdl>::iterator>::iterator it = clientConnectionsRemove.begin(); it != clientConnectionsRemove.end(); it++) {
+        clientConnections.erase(*it);
+    }
+    clientConnectionsRemove.clear();    
+
     // Server section
+    list<list<ServerSocket>::iterator> serverSocketsRemove = list<list<ServerSocket>::iterator>();
+    list<list<ClientList>::iterator> externalClientListsRemove = list<list<ClientList>::iterator>();
     list<ServerSocket>::iterator ul = serverSockets->begin(); 
     for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
-        if (connection.owner_before(it->connection) || it->connection.owner_before(connection)) {
+        // if (connection.owner_before(it->connection) || it->connection.owner_before(connection)) {
+        //     continue;
+        // }
+
+        if (connection.lock() != it->connection.lock()) {
             continue;
         }
         
-        externalClientLists.erase(it);
-        serverSockets->erase(ul);
-
-        SendAllClientListsToAllClients();
+        serverSocketsRemove.push_back(ul);
+        externalClientListsRemove.push_back(it);
 
         ul++;
     }
+
+    for (list<list<ServerSocket>::iterator>::iterator it = serverSocketsRemove.begin(); it != serverSocketsRemove.end(); it++) {
+        serverSockets->erase(*it);
+    }
+    serverSocketsRemove.clear();
+
+    for (list<list<ClientList>::iterator>::iterator it = externalClientListsRemove.begin(); it != externalClientListsRemove.end(); it++) {
+        externalClientLists.erase(*it);
+    }
+    externalClientListsRemove.clear();    
+
+    SendClientUpdate();
+    SendAllClientListsToAllClients();
+    
 
 }
 
@@ -388,4 +423,6 @@ void ServerHost::SendClientUpdate() {
 
         it->SendJson(jsonMessage);
     }
+
+    cout << "Finished loop" << endl;
 }
