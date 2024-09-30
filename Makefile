@@ -10,7 +10,7 @@ FORCE:
 # Client ------------------------------------------------------------------------------------------------
 
 # Libraries
-CLIENT_LIBS = -lglfw3dll -lopengl32 -lcomdlg32 -lcrypt32
+CLIENT_LIBS = -lglfw3dll -lopengl32 -lcomdlg32 -lcrypt32 -lssl
 
 CLIENT_SRCS = ./Client/src/glad.c \
        ./Client/src/*.cpp \

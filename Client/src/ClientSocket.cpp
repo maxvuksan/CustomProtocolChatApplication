@@ -1,11 +1,15 @@
+
 #include "ClientSocket.h"
 #include "ChatMessage.h"
 #include <iostream>
 #include <json.hpp>
 #include "ChatApplication.h"
 #include <mine/mine.h>
+#include <asio/ssl.hpp> // Include ASIO SSL
+#include <websocketpp/config/asio_client.hpp>
 #include <Windows.h>
 #include <filesystem>
+
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <httplib.h>
@@ -213,13 +217,23 @@ void ClientSocket::Start(std::string finalAddress) {
         // Initialize the Asio transport policy
         asioClient.init_asio();
 
+        // Set up the TLS context to skip verification
+        asioClient.set_tls_init_handler([](websocketpp::connection_hdl) {
+            auto ctx = websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::sslv23);
+            ctx->set_options(asio::ssl::context::verify_none); // Disable verification
+            return ctx;
+        });
+
+
+
         asioClient.set_message_handler(bind(&ClientSocket::OnMessage, this, placeholders::_1, placeholders::_2));
         asioClient.set_open_handler(bind(&ClientSocket::OnOpen, this, placeholders::_1));
         asioClient.set_close_handler(bind(&ClientSocket::OnClose, this, placeholders::_1));
 
+
         // Create a connection to the server
         websocketpp::lib::error_code ec;
-        AsioClient::connection_ptr con = asioClient.get_connection("ws://" + finalAddress, ec); // NOT ENCRYPTED
+        AsioClient::connection_ptr con = asioClient.get_connection("wss://" + finalAddress, ec); // NOT ENCRYPTED
 
         if (ec) {
             std::cout << "Could not create connection: " << ec.message() << std::endl;

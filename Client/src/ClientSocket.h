@@ -4,10 +4,10 @@
 #include "Encryption.h"
 #include <thread>
 
-#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
 
-typedef websocketpp::client<websocketpp::config::asio_client> AsioClient;
+typedef websocketpp::client<websocketpp::config::asio_tls_client> AsioClient;
 
 class Client;
 class ChatApplication;
