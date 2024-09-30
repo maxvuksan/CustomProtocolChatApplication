@@ -44,8 +44,6 @@ class Client {
         */
         void PushActiveUser(std::string publicKey, std::string serverOfOrigin, bool marked = false);
 
-        void UserLeave(std::string user);
-        void UserJoin(std::string user);
         void PushMessage(ChatMessage message, std::string user);
         int UpdateDate(std::string user, std::string date, std::string selectedUser);
         int GetColourIndex(std::string user);
