@@ -4,8 +4,10 @@
 
 #include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
+#include <fstream>
 
 #include "ServerSocket.h"
+#include "Encryption.h"
 
 #include <json.hpp>
 #include <list>
@@ -41,15 +43,19 @@ class ServerHost {
         void SendPublicChatMessage(nlohmann::json);
 
         bool CheckServerSignature(std::string);
+        bool CheckIfHdlMatches(std::list<websocketpp::connection_hdl>, websocketpp::connection_hdl);
 
         std::list<std::string> clientList;
         std::list<websocketpp::connection_hdl> clientConnections;
 
         std::list<ServerSocket> * serverSockets;
+        std::list<websocketpp::connection_hdl> serverConnections;
         std::list<ClientList> externalClientLists;
 
         std::string myAddress;
         std::string publicKey;
+
+        Encryption encryptor;
 
         server_type server;
 };

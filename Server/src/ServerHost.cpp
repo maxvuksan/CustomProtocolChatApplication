@@ -15,10 +15,17 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "client_list_request") {
+        
         SendAllClientLists(hdl);
     }
 
     if (type == "client_update_request") {
+        // Do not send client list if server did not pass the server_hello
+        if (!CheckIfHdlMatches(serverConnections, hdl)) {
+            server.close(hdl, websocketpp::close::status::normal, "Not whitelisted");
+            return;
+        }
+
         SendClientUpdate();
     }
 
@@ -36,7 +43,13 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     if (type == "server_hello") {
-        CheckServerSignature(json["signature"]);
+        bool isValid = CheckServerSignature(json["signature"]);
+
+        if (isValid != true) {
+            server.close(hdl, websocketpp::close::status::normal, "Not whitelisted");
+        }
+
+        serverConnections.push_back(hdl);
         AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
@@ -52,8 +65,60 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
 
 }
 
+bool ServerHost::CheckIfHdlMatches(list<websocketpp::connection_hdl> connectionList, websocketpp::connection_hdl hdl) {
+
+    for (list<websocketpp::connection_hdl>::iterator it = connectionList.begin(); it != connectionList.end(); it++) {
+        if (hdl.owner_before(*it) || it->owner_before(hdl)) {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+    
+}
+
 bool ServerHost::CheckServerSignature(string hash) {
-    cout << hash << endl;
+    ifstream file("Server Whitelist.txt");
+    if (!file.is_open()) {
+        return -1;
+    }
+
+    string line;
+    bool started = false;
+    string key = "";
+    while (getline(file, line)) {
+        if (line.find("-----BEGIN PUBLIC KEY-----") != -1) {
+            started = true;
+            key += line + "\n";
+            continue;
+        }
+
+        if (line.find("-----END PUBLIC KEY-----") != -1) {
+            started = false;
+            key += line;
+
+            vector<unsigned char> fingerprintVector;
+            if (!encryptor.CreateFingerprint(key, fingerprintVector)) {
+                cerr << "Fingerprint failed" << endl;
+            }
+
+            string fingerprint = mine::Base64::encode(encryptor.VectorToString(fingerprintVector));
+            
+            if (fingerprint == hash) {
+                return true;
+            }
+
+            key = "";
+            continue;
+        }
+
+        if (started = true) {
+            key += line + "\n";
+        }
+    }
+    file.close();
 
     return false;
 }
