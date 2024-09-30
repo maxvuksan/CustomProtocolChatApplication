@@ -44,6 +44,7 @@ void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
 }
 
 void ServerSocket::OnFail(websocketpp::connection_hdl hdl) {
+    usleep(10000000);
     ConnectToServer(connectionAddress, hostAddress, publicKey);
 }
 
@@ -54,8 +55,8 @@ void ServerSocket::OnClose(websocketpp::connection_hdl hdl) {
 ServerSocket::ServerSocket() {
     connected = false;
 
-    client.set_access_channels(websocketpp::log::alevel::all);
-    client.clear_access_channels(websocketpp::log::alevel::frame_payload);
+    client.set_access_channels(websocketpp::log::alevel::fail); // Changed from all
+    // client.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
     client.init_asio();
 
