@@ -83,7 +83,9 @@ void ClientSocket::SelectFile(){
 
 bool ClientSocket::UploadFileToServer(const std::string& filepath){
     
-    std::string url = "https://127.0.0.1:443";
+    std::string url = "https://" + connectedAddress + ":443";
+
+    std::cout << url << "\n";
 
     httplib::Client cli(url.c_str());
 
@@ -204,8 +206,10 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 }
 
 /// ClientSocket functions
-void ClientSocket::Start(std::string finalAddress) {
+void ClientSocket::Start(std::string address, std::string port) {
 
+    std::string finalAddress = address + ":" + port;
+    connectedAddress = address;
     try {
 
         chatApplication->SetConnectedState(CS_IN_PROGRESS);

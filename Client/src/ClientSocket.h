@@ -14,7 +14,7 @@ class ChatApplication;
 
 class ClientSocket {
     public:
-        void Start(std::string finalAddress);
+        void Start(std::string address, std::string port);
         void End();
 
         int SendChatMessage(std::string chatMessage, std::string publicKey);
@@ -36,6 +36,8 @@ class ClientSocket {
         //int GetPublicKey(){return publicKey;};
         std::string publicKey;
     private:
+
+        std::string connectedAddress; // without port
 
         std::string privateKey;
         std::string fingerprint;
