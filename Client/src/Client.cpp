@@ -7,11 +7,9 @@ Client::Client(){
     allMessages.clear();
     activeUsers.clear();
 
-    activeUsers = {{"", "", "", "", 1}};
+    activeUsers = {{"Public Chat", "Public Chat", "Public Chat", "0", 1}};
 
-    std::vector<ChatMessage> messages1 = {};
-
-    allMessages[" "].push_back(ChatMessage({}));
+    allMessages[""].push_back(ChatMessage({}));
 }
 
 void Client::RemoveMarkedClients(){
@@ -110,6 +108,7 @@ int Client::GetClientIndex(std::string username){
 
 
 void Client::PushMessage(ChatMessage currentMessage, std::string currentUser){
+
     allMessages[currentUser].push_back(currentMessage);
 
     return;
@@ -145,7 +144,7 @@ int Client::UpdateDate(std::string user, std::string date, std::string selectedU
         }
     }
 
-    std::sort(activeUsers.begin(), activeUsers.end(),
+    std::sort(activeUsers.begin()+1, activeUsers.end(),
         [this](const ActiveUsers& a, const ActiveUsers& b) {
             return this->compareByDate(a, b);
         });
@@ -159,26 +158,4 @@ int Client::UpdateDate(std::string user, std::string date, std::string selectedU
     }
 
     return index;
-}
-
-// ARE THESE USED???
-void Client::UserLeave(std::string user){
-    // remove user from 'activeUsers' and 'allMessages' map
-    allMessages.erase(user);
-
-    for(int i = 0; i < activeUsers.size(); i++){
-        
-        if(activeUsers[i].publicKey == user){
-            activeUsers.erase (activeUsers.begin()+i);
-        }
-    }
-
-    return;
-}
-
-void Client::UserJoin(std::string user){
-    // add user to 'activeUsers' and initialise in map
-    activeUsers.push_back({user, ""});
-    allMessages[user] = {};
-    return;
 }

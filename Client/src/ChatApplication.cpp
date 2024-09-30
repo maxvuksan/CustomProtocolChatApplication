@@ -21,6 +21,7 @@ std::vector<ImVec4> ChatApplication::colourVectorU32 = {
     {150, 120, 233, 255}, // purple
     {120, 233, 232, 255}, // blue
     {146, 233, 120, 255}, // green
+    {255, 255, 255, 255}, // white
 };
 
 
@@ -238,36 +239,50 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
         ImVec2 text1_size = io.Fonts->Fonts[0]->CalcTextSizeA(16.0f, FLT_MAX, 0.0f, currentClient.GetActiveUsers()[i].pseudoName.c_str());
         ImVec2 text1_pos = ImVec2(30 + button_pos.x, (button_size.y - text1_size.y) * 0.5f + button_pos.y - 5);
 
-        //std::string psuedoName;
-            // try {
-            //     int number = 2; //std::stoi(currentClient.GetActiveUsers()[i].publicKey);
-            //     psuedoName = GetPsuedoName();
-            // } catch (const std::invalid_argument& e){
-            //     psuedoName = currentClient.GetActiveUsers()[i].publicKey;
-            // } catch (const std::out_of_range& e){
-            //     psuedoName = currentClient.GetActiveUsers()[i].publicKey;
-            // }
-
         if(i == selectedUser){
-            int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].pseudoName);
-            ImVec4 currentColour = colourVectorU32[currentColourIndex];
-            
-            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
-            draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
-            
+            if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
+                ImVec4 currentColour = colourVectorU32[5];
+                
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
+                draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
+                
 
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
+
+            } else {
+                int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].pseudoName);
+                ImVec4 currentColour = colourVectorU32[currentColourIndex];
+                
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
+                draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
+                
+
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
+            }
 
         }
         else if(hovered){
-            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            } else {
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            }
+
+           
         }
         else{
-            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
-            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            } else {
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
+            }
         }
 
+        
         int newSelectedUser = selectedUser;
 
     }
@@ -295,7 +310,6 @@ void ChatApplication::DrawConnectToServerModal(){
     static bool portInput = false;
     static bool focusOnPort = false;
     static bool showWarning = false;
-
 
 
     ImVec2 modalSize = ImVec2(400,200);
