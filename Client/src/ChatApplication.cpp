@@ -346,11 +346,10 @@ void ChatApplication::DrawConnectToServerModal(){
                     std::string port(serverPortBuffer);
                     std::string finalAddress = address + ":" + port;
 
-
                     serverAddressToJoin = finalAddress;
 
                     ImGui::CloseCurrentPopup();
-                    socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+                    socketThread = std::thread(&ClientSocket::Start, &socket, address, port); 
 
                 } else {
                     showWarning = true;
@@ -369,7 +368,7 @@ void ChatApplication::DrawConnectToServerModal(){
                 std::string finalAddress = address + ":" + port;
 
                 ImGui::CloseCurrentPopup();
-                socketThread = std::thread(&ClientSocket::Start, &socket, finalAddress); 
+                socketThread = std::thread(&ClientSocket::Start, &socket, address, port); 
             }
 
             if(showWarning){
