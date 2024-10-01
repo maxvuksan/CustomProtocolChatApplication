@@ -4,10 +4,12 @@
 
 Protocol Specification [here](https://github.com/xvk-64/2024-secure-programming-protocol) 
 
+![Visual Example](Visual.png)
+
 below you will find instructions on how to:
-	- Install dependencies for Windows (what we did)
-	- Compile the server and client
-	- Run the server
+* Install dependencies for Windows (what we did)
+* Compile the server and client
+* Run the server
 
 # Windows Installiation 
 
@@ -71,9 +73,5 @@ Upon entering this port a (ip)..(port)Keys.txt file will be created with the ser
 
 If you want to connect to a server that was NOT listed in "Server List.txt" type "connect (address)" replacing (address)
 with the destination address (e.g. 127.0.0.1:4563)  
-
-# Example
-
-![Visual Example](Visual.png)
 
 
