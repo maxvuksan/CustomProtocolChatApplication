@@ -1,4 +1,5 @@
 #include "Program.h"
+#include "Globals.h"
 
 int Program::windowWidth;
 int Program::windowHeight;
@@ -90,42 +91,55 @@ Program::Program(int _windowWidth, int _windowHeight, std::string windowTitle){
 
     style.Colors[ImGuiCol_Text]                  = ImVec4(0.86f, 0.93f, 0.89f, 0.78f);
     style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.86f, 0.93f, 0.89f, 0.28f);
-    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.13f, 0.14f, 0.17f, 1.00f);
-    style.Colors[ImGuiCol_Border]                = ImVec4(0.31f, 0.31f, 1.00f, 0.00f);
+    style.Colors[ImGuiCol_WindowBg]              = GLOBAL_BACKGROUND_COLOUR;
+    style.Colors[ImGuiCol_Border]                = GLOBAL_BACKGROUND_LIGHT_COLOUR;
     style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.20f, 0.22f, 0.27f, 1.00f);
-    style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.92f, 0.18f, 0.29f, 0.78f);
-    style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.20f, 0.22f, 0.27f, 1.00f);
-    style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.20f, 0.22f, 0.27f, 0.75f);
-    style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.20f, 0.22f, 0.27f, 0.47f);
-    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.20f, 0.22f, 0.27f, 1.00f);
+    style.Colors[ImGuiCol_FrameBg]               = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_FrameBgHovered]        = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_FrameBgActive]         = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TitleBg]               = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TitleBgCollapsed]      = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TitleBgActive]         = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_MenuBarBg]             = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.20f, 0.22f, 0.27f, 1.00f); 
     style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.09f, 0.15f, 0.16f, 1.00f);
     style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.92f, 0.18f, 0.29f, 0.78f);
-    style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
+    style.Colors[ImGuiCol_ScrollbarGrabActive]   = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
     style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.71f, 0.22f, 0.27f, 1.00f);
     style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
-    style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_Button]                = ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
-    style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.92f, 0.18f, 0.29f, 0.86f);
-    style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_Header]                = ImVec4(0.92f, 0.18f, 0.29f, 0.76f);
-    style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.92f, 0.18f, 0.29f, 0.86f);
-    style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_Separator]             = ImVec4(0.14f, 0.16f, 0.19f, 1.00f);
-    style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.92f, 0.18f, 0.29f, 0.78f);
-    style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.47f, 0.77f, 0.83f, 0.04f);
-    style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.92f, 0.18f, 0.29f, 0.78f);
-    style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
+    style.Colors[ImGuiCol_SliderGrabActive]      = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_Button]                = GLOBAL_BACKGROUND_LIGHT_COLOUR; //ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
+    style.Colors[ImGuiCol_ButtonHovered]         = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ButtonActive]          = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_Header]                = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_HeaderHovered]         = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_HeaderActive]          = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_Separator]             = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_SeparatorHovered]      = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_SeparatorActive]       = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ResizeGrip]            = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ResizeGripHovered]     = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ResizeGripActive]      = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
     style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.86f, 0.93f, 0.89f, 0.63f);
     style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
     style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.86f, 0.93f, 0.89f, 0.63f);
     style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.92f, 0.18f, 0.29f, 0.43f);
-    style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.20f, 0.22f, 0.27f, 0.9f);
-    style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.1, 0.1, 0.12, 0.7f);
+    style.Colors[ImGuiCol_TextSelectedBg]        = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_PopupBg]               = GLOBAL_BACKGROUND_COLOUR;
+
+    style.Colors[ImGuiCol_Tab]                  = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TabActive]            = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TabHovered]           = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TabSelectedOverline]  = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    
+    style.Colors[ImGuiCol_TabDimmedSelectedOverline]  = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TabDimmed]                  = GLOBAL_BACKGROUND_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_TabDimmedSelected]          = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+
+
+
+    style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.1, 0.1, 0.12, 0.75f);
+
 
     // Enable docking
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -156,7 +170,7 @@ void Program::Run(){
         // Render
         ImGui::Render();
 
-        glClearColor(0.1, 0.04, 0.13, 1.0f);
+        glClearColor(GLOBAL_BACKGROUND_COLOUR.x * 0.5, GLOBAL_BACKGROUND_COLOUR.y * 0.5, GLOBAL_BACKGROUND_COLOUR.z * 0.5, GLOBAL_BACKGROUND_COLOUR.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render ImGui

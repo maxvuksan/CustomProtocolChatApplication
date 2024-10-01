@@ -144,7 +144,7 @@ Vibrant Vicuña
 Witty Weasel
 Xtra-special Xantus
 Youthful Yarkand
-Zealous Zebra Finch
+Zealous Zebra
 Artful Anole
 Bouncy Bonobo
 Courageous Crane
@@ -171,3 +171,11 @@ Warmhearted Wallaroo
 Minuscule Man
 Stretchy Slinky
 Fuzzy Pickle
+Banging Boombox
+Slapping Snake
+Mini Monster
+Juicy Jellyfish
+Cute Koala
+Boss Baby
+Silly Singer 
+Proud Pot Plant
