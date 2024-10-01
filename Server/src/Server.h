@@ -37,7 +37,7 @@ class Server {
 
         asio::io_context io_context;
 
-        std::list<ServerSocket> socketList;
+        std::list<ServerSocket> * socketList = new std::list<ServerSocket>();
         std::list<std::thread> threadList;
         std::list<std::string> addressList;
 

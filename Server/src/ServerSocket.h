@@ -21,10 +21,12 @@ class ServerSocket {
         void ConnectToServer(std::string, std::string, std::string);
         void SendJson(nlohmann::json);
         bool IsConnected();
+        void Stop();
 
         std::string GetConnectionAddress();
         
         ServerSocket();
+        ~ServerSocket();
 
     private:
         Client client;

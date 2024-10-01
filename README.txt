@@ -68,6 +68,7 @@ There are three important .txt files you need to edit before running a server
 2.	Server List.txt
 		This text file contains a line for each server address (e.g. 127.0.0.1:4563) you want to automatically connect to upon running the server.
 		The server will attempt to connect every 10 seconds if a connection is not established immediately.
+		Note: If the current servers own ip is in the list it will ignore it (useful for testing)
 
 3.	Server Whitelist.txt
 		This text file contains the public keys of the only servers that are allowed to connect. 
