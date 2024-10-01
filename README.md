@@ -20,3 +20,7 @@ Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 
 scoop bucket add main        // Might already exist if so just continue
 scoop install main/make
+
+# Example
+
+![Visual Example](Visual.png)
