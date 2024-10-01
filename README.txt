@@ -2,6 +2,7 @@ In this README you will find instructions on how to:
 	- Install dependencies for Windows (what we did)
 	- Compile the server and client
 	- Run the server
+	- Concact us
 
 ###############################
 #							  #
@@ -11,7 +12,7 @@ In this README you will find instructions on how to:
 
 1.	Install Mingw32 (MinGW-W64-builds-5.0.0) 
 
-	We could were unable to find this exact build so we've uploaded a zip file (if you do it this way
+	We could were unable to find this exact build online so we've uploaded a zip file (if you do it this way
 	follow the bellow instructions to add it to your system path)
 		- https://drive.google.com/file/d/1OWfUZDzO-zTUAAP0gxaqcdBLwayYyLix/view?usp=sharing
 
@@ -79,3 +80,13 @@ If you want to connect to a server that was NOT listed in "Server List.txt" type
 with the destination address (e.g. 127.0.0.1:4563)  
 
 
+###############################
+#							  #
+#	  		CONTACTS	   	  #
+#							  #
+###############################
+
+We all use discord regularly
+maxmaster0065
+minillx
+w0wd0g
