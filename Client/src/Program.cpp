@@ -101,9 +101,9 @@ Program::Program(int _windowWidth, int _windowHeight, std::string windowTitle){
     style.Colors[ImGuiCol_TitleBgCollapsed]      = GLOBAL_BACKGROUND_LIGHT_COLOUR;
     style.Colors[ImGuiCol_TitleBgActive]         = GLOBAL_BACKGROUND_LIGHT_COLOUR;
     style.Colors[ImGuiCol_MenuBarBg]             = GLOBAL_BACKGROUND_LIGHT_COLOUR;
-    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.20f, 0.22f, 0.27f, 1.00f); 
-    style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.09f, 0.15f, 0.16f, 1.00f);
-    style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.92f, 0.18f, 0.29f, 0.78f);
+    style.Colors[ImGuiCol_ScrollbarBg]           = GLOBAL_BACKGROUND_COLOUR; 
+    style.Colors[ImGuiCol_ScrollbarGrab]         = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_ScrollbarGrabHovered]  = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
     style.Colors[ImGuiCol_ScrollbarGrabActive]   = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
     style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.71f, 0.22f, 0.27f, 1.00f);
     style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
@@ -135,7 +135,8 @@ Program::Program(int _windowWidth, int _windowHeight, std::string windowTitle){
     style.Colors[ImGuiCol_TabDimmedSelectedOverline]  = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
     style.Colors[ImGuiCol_TabDimmed]                  = GLOBAL_BACKGROUND_LIGHT_COLOUR;
     style.Colors[ImGuiCol_TabDimmedSelected]          = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
-
+    style.Colors[ImGuiCol_TabSelected]          = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
+    style.Colors[ImGuiCol_DockingPreview]          = GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR;
 
 
     style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.1, 0.1, 0.12, 0.75f);

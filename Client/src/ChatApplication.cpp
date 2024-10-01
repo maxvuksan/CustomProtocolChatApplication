@@ -21,8 +21,8 @@ std::vector<ImVec4> ChatApplication::colourVectorU32 = {
     {150, 120, 233, 255}, // purple
     {120, 233, 232, 255}, // blue
     {146, 233, 120, 255}, // green
-    {255, 255, 255, 255}, // white
 };
+// {255, 255, 255, 255}, // white
 
 
 void ChatApplication::Start(){
@@ -243,11 +243,11 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
             if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
                 ImVec4 currentColour = colourVectorU32[5];
                 
-                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 30));
-                draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), 0.0f, 0); // Border
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(255, 255, 255, 30));
+                draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(255, 255, 255, 255), 0.0f, 0); // Border
                 
 
-                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(currentColour.x, currentColour.y, currentColour.z, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255, 255, 255, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
 
             } else {
                 int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].pseudoName);
@@ -262,27 +262,15 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
         }
         else if(hovered){
-            if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
-                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
-                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
-            } else {
-                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
-                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
-            }
-
-           
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR_U32);
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
         }
         else{
-            if(currentClient.GetActiveUsers()[i].publicKey == "Public Chat"){
-                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
-                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
-            } else {
-                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
-                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,255), currentClient.GetActiveUsers()[i].pseudoName.c_str());
-            }
+            draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), GLOBAL_BACKGROUND_COLOUR_U32);
+            draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255,255,255,100), currentClient.GetActiveUsers()[i].pseudoName.c_str());
         }
 
-        
+
         int newSelectedUser = selectedUser;
 
     }
@@ -432,7 +420,7 @@ void ChatApplication::Update(){
     ImVec2 scrollAreaSize = ImVec2(contentRegion.x, contentRegion.y - 60); // Reserve space for the input box
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 20);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING + 10, GLOBAL_PADDING));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING + 10 + 10, GLOBAL_PADDING));
     ImGui::PushStyleColor(ImGuiCol_Border, GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
     ImGui::BeginChild("MessagesScrollArea", scrollAreaSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
