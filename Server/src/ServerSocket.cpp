@@ -6,7 +6,7 @@ using Json = nlohmann::json;
 using namespace std;
 
 void ServerSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr payload) {
-
+    cout << "Recieved message" << endl;
 }
 
 void ServerSocket::OnOpen(websocketpp::connection_hdl hdl) {
@@ -55,8 +55,8 @@ void ServerSocket::OnClose(websocketpp::connection_hdl hdl) {
 ServerSocket::ServerSocket() {
     connected = false;
 
-    client.set_access_channels(websocketpp::log::alevel::fail); // Changed from all
-    // client.clear_access_channels(websocketpp::log::alevel::frame_payload);
+    client.set_access_channels(websocketpp::log::alevel::all); // Changed from all
+    client.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
     client.init_asio();
 
@@ -69,15 +69,17 @@ ServerSocket::ServerSocket() {
 
 void ServerSocket::ConnectToServer(string dstIp, string srcAddress, string key) {
 
-    hostAddress = srcAddress;
-    publicKey = key;
-    connectionAddress = dstIp;
+    if (hostAddress == "") {
+        hostAddress = srcAddress;
+        publicKey = key;
+        connectionAddress = dstIp;
+    }
 
     websocketpp::lib::error_code ec; 
     
-    cout << "Attempting to connect to server with ip: " << dstIp << endl;
+    cout << "Attempting to connect to server with ip: " << connectionAddress << endl;
 
-    string address = "wss://" + dstIp;
+    string address = "wss://" + connectionAddress;
 
     // Set TLS init handler
     client.set_tls_init_handler([](websocketpp::connection_hdl) -> std::shared_ptr<asio::ssl::context> {
@@ -95,9 +97,11 @@ void ServerSocket::ConnectToServer(string dstIp, string srcAddress, string key) 
     });
 
     Client::connection_ptr con = client.get_connection(address, ec);
+    connection = con->get_handle();
 
     if (ec) {  
         cout << "Connection attempt failed: " << ec.message() << endl;
+        
         return;
     }
 
@@ -112,7 +116,11 @@ bool ServerSocket::IsConnected() {
 }
 
 void ServerSocket::SendJson(Json json) {
-    client.send(connection, to_string(json), websocketpp::frame::opcode::text);
+    if (client.get_con_from_hdl(connection)->get_state() != websocketpp::session::state::open) {
+        cerr << "Connection not open" << endl;
+    }
+
+    client.send(connection, json.dump(), websocketpp::frame::opcode::text);
 }
 
 string ServerSocket::GetConnectionAddress() {
