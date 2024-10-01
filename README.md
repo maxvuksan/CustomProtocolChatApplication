@@ -2,7 +2,7 @@
 
 *A non-persistant chat application utalizing a custom student created protocol.*
 
-Protocol Specification [here](https://github.com/xvk-64/2024-secure-programming-protocol) 
+Protocol Specification <a href="https://github.com/xvk-64/2024-secure-programming-protocol" target="_blank">here</a>
 
 ![Visual Example](Visual.png)
 
@@ -15,7 +15,7 @@ below you will find instructions on how to:
 
 ### Install Mingw32 (MinGW-W64-builds-5.0.0) 
 
-We could were unable to find this exact build so we've uploaded a zip file [here](https://drive.google.com/file/d/1OWfUZDzO-zTUAAP0gxaqcdBLwayYyLix/view?usp=sharing) 
+We could were unable to find this exact build so we've uploaded a zip file <a href="https://drive.google.com/file/d/1OWfUZDzO-zTUAAP0gxaqcdBLwayYyLix/view?usp=sharing" target="_blank">here</a>
 (if you do it this way follow the bellow instructions to add it to your system path) 
 
 1. 	Search "edit the system environment variables" and click the control panel result 
