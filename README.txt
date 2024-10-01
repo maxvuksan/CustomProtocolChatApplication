@@ -12,7 +12,7 @@ In this README you will find instructions on how to:
 1.	Install Mingw32 (MinGW-W64-builds-5.0.0) 
 
 	We could were unable to find this exact build so we've uploaded a zip file (if you do it this way
-	follow the bellow instructions to add it to your system path)
+	follow the below instructions to add it to your system path)
 		- https://drive.google.com/file/d/1OWfUZDzO-zTUAAP0gxaqcdBLwayYyLix/view?usp=sharing
 
 	1. 	Search "edit the system environment variables" and click the control panel result 
