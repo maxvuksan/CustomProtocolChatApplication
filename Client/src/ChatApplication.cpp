@@ -420,7 +420,7 @@ void ChatApplication::Update(){
     ImVec2 scrollAreaSize = ImVec2(contentRegion.x, contentRegion.y - 60); // Reserve space for the input box
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 20);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING + 10, GLOBAL_PADDING));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING + 10 + 10, GLOBAL_PADDING));
     ImGui::PushStyleColor(ImGuiCol_Border, GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
     ImGui::BeginChild("MessagesScrollArea", scrollAreaSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
@@ -481,10 +481,7 @@ void ChatApplication::Update(){
 
     // Add a separator and a text box at the bottom of the window
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 0ab8df7878396a713570f624ac40dded890ddd60
     if(ImGui::Button(" + ")){
         socket.SelectFile();
     }
@@ -492,18 +489,11 @@ void ChatApplication::Update(){
     ImVec2 buttonSize = ImGui::GetItemRectSize();
 
     ImGui::SameLine();
-<<<<<<< HEAD
-    
-    if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].publicKey != " ")){
-        ImGui::SetNextItemWidth(contentRegion.x - buttonSize.x - ImGui::GetStyle().ItemSpacing.x);
-    }    
-=======
 
     if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].publicKey != " ")){
         ImGui::SetNextItemWidth(contentRegion.x - buttonSize.x - ImGui::GetStyle().ItemSpacing.x);
     }
 
->>>>>>> 0ab8df7878396a713570f624ac40dded890ddd60
 
     if (ImGui::InputText("##MessageInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
 
