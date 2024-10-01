@@ -1,5 +1,3 @@
-## PLEASE READ THE .TXT NOT THIS .MD
-
 # Chat Application
 
 *A non-persistant chat application utalizing a custom student created protocol.*
