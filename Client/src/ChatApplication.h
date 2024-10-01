@@ -49,7 +49,7 @@ class ChatApplication : public Program{
         /*
             @returns the index of a random colour
         */
-        static int GetRandomColourIndex(){return rand() % colourVectorU32.size();}
+        static int GetRandomColourIndex(){return rand() % colourVectorU32.size() - 1;}
         
         static std::string GetPsuedoName(){return pseudoNameVector[rand() % pseudoNameVector.size()];}
 
