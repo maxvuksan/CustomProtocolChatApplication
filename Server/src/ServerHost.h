@@ -40,18 +40,22 @@ class ServerHost {
         void SendAllClientLists(websocketpp::connection_hdl);
         void SendAllClientListsToAllClients();
 
-        void SendChatMessage(nlohmann::json, nlohmann::json);
+        void SendChatMessage(nlohmann::json, nlohmann::json, websocketpp::connection_hdl);
         void SendPublicChatMessage(nlohmann::json);
 
         bool CheckServerSignature(std::string);
         bool CheckIfHdlMatches(std::list<websocketpp::connection_hdl>, websocketpp::connection_hdl);
 
+        bool ValidCount(websocketpp::connection_hdl, int);
+
         std::list<std::string> clientList;
         std::list<websocketpp::connection_hdl> clientConnections;
+        std::list<int> clientCounts;
 
         std::list<ServerSocket> * serverSockets;
         std::list<websocketpp::connection_hdl> serverConnections;
         std::list<ClientList> externalClientLists;
+        std::list<int> serverCounts;
 
         std::list<int> foo;
         int count = 0;
