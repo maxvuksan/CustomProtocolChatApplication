@@ -29,14 +29,14 @@ We could were unable to find this exact build so we've uploaded a zip file <a hr
 ### Install Scoop (https://scoop.sh/)
 
 1. Open a PowerShell terminal
-2. Run "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
-3. Run "Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression"
+2. Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+3. Run `Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression`
 
 ###	Install Make (https://scoop.sh/#/apps?q=make)
 
 1. Open a PowerShell terminal
-2. Run "scoop bucket add main" (may already exist, if so continue to step 3)
-3. Run "scoop install main/make"
+2. Run `scoop bucket add main` (may already exist, if so continue to step 3)
+3. Run `scoop install main/make`
 
 # Compiling
 
