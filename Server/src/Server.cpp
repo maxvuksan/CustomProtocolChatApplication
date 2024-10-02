@@ -30,7 +30,7 @@ int Server::StartServer() {
 
     cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     
-    hostThread = thread(&ServerHost::StartServer, &serverHost, port, &socketList, address, publicKey);
+    hostThread = thread(&ServerHost::StartServer, &serverHost, port, socketList, address, publicKey);
 
     httpsServer = new Https(ip);
     httpsThread = thread(&Https::StartServer, httpsServer);
@@ -159,9 +159,9 @@ void Server::CommandManager(string command) {
 // Deprecated
 void Server::RemoveSocketAt(int index) {
 
-    auto socketIt = socketList.begin();
+    auto socketIt = socketList->begin();
     advance(socketIt, index);
-    socketList.erase(socketIt);
+    socketList->erase(socketIt);
 
     auto addressIt = addressList.begin();
     advance(addressIt, index);
@@ -178,13 +178,10 @@ int Server::ConnectToServer(string dstIp) {
         return -3;
     }
 
-    //socketList.emplace_back();
     addressList.push_back(dstIp);
 
-    //ServerSocket & lastSocket = socketList.back(); 
-
-    socketList.emplace_back();
-    threadList.emplace_back(&ServerSocket::ConnectToServer, &socketList.back(), dstIp, address, publicKey);
+    socketList->emplace_back();
+    threadList.emplace_back(&ServerSocket::ConnectToServer, &socketList->back(), dstIp, address, publicKey);
     
     return 0;
 }

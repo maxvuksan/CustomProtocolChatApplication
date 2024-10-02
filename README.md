@@ -29,14 +29,14 @@ We could were unable to find this exact build so we've uploaded a zip file <a hr
 ### Install Scoop (https://scoop.sh/)
 
 1. Open a PowerShell terminal
-2. Run "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
-3. Run "Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression"
+2. Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+3. Run `Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression`
 
 ###	Install Make (https://scoop.sh/#/apps?q=make)
 
 1. Open a PowerShell terminal
-2. Run "scoop bucket add main" (may already exist, if so continue to step 3)
-3. Run "scoop install main/make"
+2. Run `scoop bucket add main` (may already exist, if so continue to step 3)
+3. Run `scoop install main/make`
 
 # Compiling
 
@@ -63,6 +63,7 @@ You can use 127.0.0.1 if you want to test using your local machine
 ### Server List.txt
 This text file contains a line for each server address (e.g. 127.0.0.1:4563) you want to automatically connect to upon running the server.
 The server will attempt to connect every 10 seconds if a connection is not established immediately.
+Note: If the current servers own ip is in the list it will ignore it (useful for testing)
 
 ### Server Whitelist.txt
 This text file contains the public keys of the only servers that are allowed to connect. 
