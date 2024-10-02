@@ -91,3 +91,8 @@ We all use discord regularly
 maxmaster0065
 minillx
 w0wd0g
+
+You can also contact us via email
+alexia.kanelos@adelaide.edu.au
+a1850492@adelaide.edu.au
+a1861026@adelaide.edu.au
