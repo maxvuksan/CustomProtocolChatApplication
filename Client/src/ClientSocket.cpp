@@ -506,12 +506,10 @@ void ClientSocket::ParseMessage(const std::string& data){
 
         const std::vector<ActiveUsers>& activeUsers = client->GetActiveUsers();
 
-
         // mark all the active users
         for(int i = 0; i < activeUsers.size(); i++){
             client->MarkClient(i, true);
         }
-
 
         // update and unmark clients that we find
 

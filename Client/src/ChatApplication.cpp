@@ -503,8 +503,20 @@ void ChatApplication::Update(){
         if (!newMessage.empty()) {
             // Add the new message to the selected user's message list (pseudo-code)
 
-            // Sending chat message to server
-            socket.SendChatMessage(newMessage, currentClient.GetActiveUsers()[selectedUser].publicKey);
+            
+            bool loopingSend = false; // FOR TESTING: sends message multiple times ...?
+
+            if(loopingSend){
+
+                while(true){
+                    // Sending chat message to server
+                    socket.SendChatMessage(newMessage, currentClient.GetActiveUsers()[selectedUser].publicKey);
+                }
+            }
+            else{
+                // Sending chat message to server
+                socket.SendChatMessage(newMessage, currentClient.GetActiveUsers()[selectedUser].publicKey);
+            }
 
             currentClient.PushMessage({newMessage, "me (" + currentPseudoName +")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].publicKey);
 
