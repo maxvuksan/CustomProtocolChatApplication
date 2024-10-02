@@ -50,6 +50,21 @@ void ServerSocket::OnFail(websocketpp::connection_hdl hdl) {
 
 void ServerSocket::OnClose(websocketpp::connection_hdl hdl) {
     connected = false;
+
+    // while (1) {
+    //     usleep(500000);
+    //     cout << "Zoo wee" << endl;
+    // }
+}
+
+void ServerSocket::Stop() {
+    connected = false;
+}
+
+ServerSocket::~ServerSocket() {
+    cout << "Cleaning up" << endl;
+        
+    
 }
 
 ServerSocket::ServerSocket() {

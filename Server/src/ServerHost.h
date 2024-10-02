@@ -5,6 +5,7 @@
 #include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
 #include <fstream>
+#include <unistd.h>
 
 #include "ServerSocket.h"
 #include "Encryption.h"
@@ -51,6 +52,9 @@ class ServerHost {
         std::list<ServerSocket> * serverSockets;
         std::list<websocketpp::connection_hdl> serverConnections;
         std::list<ClientList> externalClientLists;
+
+        std::list<int> foo;
+        int count = 0;
 
         std::string myAddress;
         std::string publicKey;

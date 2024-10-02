@@ -127,6 +127,7 @@ private:
                         int endPos = request.find("?", startPos);
 
                         string fileName = request.substr(startPos, endPos - startPos);
+                        cout << fileName << endl;
 
                         fs::path path = "uploads"; 
                         std::ifstream file(path / fileName, std::ios::binary);
