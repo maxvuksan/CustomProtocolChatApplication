@@ -2,7 +2,7 @@
 
 *A non-persistant chat application utalizing a custom student created protocol.*
 
-Protocol Specification <a href="https://github.com/xvk-64/2024-secure-programming-protocol" target="_blank">here</a>
+Protocol Specification [https://github.com/xvk-64/2024-secure-programming-protocol](https://github.com/xvk-64/2024-secure-programming-protocol)
 
 ![Visual Example](Visual.png)
 
