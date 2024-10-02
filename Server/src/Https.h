@@ -46,6 +46,7 @@ private:
                 if (!error) {
 
                     string request(data_, length);
+                    cout << request << endl;
 
                     if (request.find("POST /api/upload") != std::string::npos) {
                         mode = "upload";
