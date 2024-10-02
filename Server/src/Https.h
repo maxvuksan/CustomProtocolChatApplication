@@ -153,7 +153,15 @@ private:
                     
                 } else {
 
-                    std::cerr << "Read failed: " << error.message() << std::endl;
+                    // Checking if the upload failed
+                    if (finishedReading == false && error.value() == 10054) {
+                        cerr << "Read failed: " << error.message() << endl;
+                        socket_.shutdown();
+                    } else {
+                        cerr << "Read failed: " << error.message() << endl;
+                    }
+
+                    
                 }
             });
     }
@@ -297,6 +305,7 @@ private:
     int writeCount = 0;
     bool startedContent = false;
     bool finishedReading = false;
+    bool foundEnd = false;
     string savedFileName;
 
     string boundary;
