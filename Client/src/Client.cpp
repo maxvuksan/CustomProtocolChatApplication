@@ -117,6 +117,7 @@ void Client::PushMessage(ChatMessage currentMessage, std::string currentUser){
 std::string Client::GetKeyFromFingerprint(std::string fingerprint){
 
     for(int i = 0; i < activeUsers.size(); i++){
+
         if(activeUsers[i].fingerprint == fingerprint){
             return activeUsers[i].publicKey;
         }
@@ -129,6 +130,26 @@ std::string Client::GetPseudoNameFromFingerprint(std::string fingerprint){
 
     for(int i = 0; i < activeUsers.size(); i++){
         if(activeUsers[i].fingerprint == fingerprint){
+            return activeUsers[i].pseudoName;
+        }
+    }
+
+    return "";
+}
+
+std::string Client::GetFingerprintFromKey(std::string key){
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].publicKey == key){
+            return activeUsers[i].fingerprint;
+        }
+    }
+
+    return "";
+}
+
+std::string Client::GetPseudoNameFromKey(std::string key){
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].publicKey == key){
             return activeUsers[i].pseudoName;
         }
     }

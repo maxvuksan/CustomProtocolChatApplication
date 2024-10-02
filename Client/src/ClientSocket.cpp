@@ -18,7 +18,7 @@ using Json = nlohmann::json;
 
 /// Handlers
 void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::config::asio_client::message_type::ptr msg) {
-    std::cout << "Received message: " << msg->get_payload() << std::endl;
+    // std::cout << "Received message: " << msg->get_payload() << std::endl;
     ParseMessage(msg->get_payload());
 }
 
@@ -268,13 +268,6 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
     // Creating json
     Json jsonMessage;
 
-    /*
-        type
-        data
-        counter
-        signature - base64 (signature of (data+counter))
-    */
-
     if(currentPublicKey == "Public Chat"){
         // PUBLIC CHAT MESSAGE
 
@@ -291,6 +284,22 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
         jsonMessage["data"]["message"] = chatMessage;
         jsonMessage["counter"] = counter++;
 
+        Json messageToSign;
+        messageToSign["data"] = jsonMessage["data"];
+        messageToSign["counter"] = jsonMessage["counter"];
+        std::string toSign = messageToSign.dump();
+
+        std::vector<unsigned char> signature;
+        try{
+            signature = encryptor.SignMessage(toSign, privateKey);
+        } catch (const std::exception& e){
+            cerr << "Signing message failed: " << e.what() << endl;
+            return 1;
+        }
+        string encodedSignature =  mine::Base64::encode(encryptor.VectorToString(signature));
+
+        jsonMessage["signature"] = encodedSignature;
+
         asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
         std::cout << "message sent\n";
@@ -298,7 +307,7 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
         return 1;
     }
 
-    std::vector<unsigned char> key(32);
+    std::vector<unsigned char> key(16);
     if (!RAND_bytes(key.data(), key.size())) {
         std::cerr << "Error generating key." << std::endl;
         return 1;
@@ -332,18 +341,10 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
 
     string encodedSymmKey = mine::Base64::encode(encryptor.VectorToString(RSAEncryptedAESKey));
 
-
-    // NEED FINGERPRINT OF BOTH THE SENDER AND RECIPIENT
-    std::vector<unsigned char> recipientFingerprint;
-    if (!encryptor.CreateFingerprint(publicKey, recipientFingerprint)) {
-        std::cerr << "Fingerprint failed." << std::endl;
-        return 1;
-    }
-    string encodedRecipientFingerprint = mine::Base64::encode(encryptor.VectorToString(recipientFingerprint));
+    string recipientFingerprint = client->GetFingerprintFromKey(currentPublicKey);
 
     jsonMessage["type"] = "signed_data";
-    jsonMessage["counter"] = counter; // TEMP
-    jsonMessage["signature"] = "NEED TO DO"; // TEMP
+    jsonMessage["counter"] = counter++;
 
     jsonMessage["data"]["type"] = "chat";
     jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
@@ -355,11 +356,28 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
     jsonMessage["data"]["chat"]["message"] = encodedCiphertext;
 
     try {
-        jsonMessage["data"]["chat"]["participants"] = nlohmann::json::array({fingerprint, encodedRecipientFingerprint});
+        jsonMessage["data"]["chat"]["participants"] = nlohmann::json::array({fingerprint, recipientFingerprint});
     } catch (const std::exception& e) {
         cerr << "Setting participants failed: " << e.what() << endl;
         return 1;
     }
+
+    Json messageToSign;
+    messageToSign["data"] = jsonMessage["data"];
+    messageToSign["counter"] = jsonMessage["counter"];
+    std::string toSign = messageToSign.dump();
+
+    std::vector<unsigned char> signature;
+    try{
+        signature = encryptor.SignMessage(toSign, privateKey);
+    } catch (const std::exception& e){
+        cerr << "Signing message failed: " << e.what() << endl;
+        return 1;
+    }
+
+    string encodedSignature =  mine::Base64::encode(encryptor.VectorToString(signature));
+
+    jsonMessage["signature"] = encodedSignature;
 
     asioClient.send(global_hdl, to_string(jsonMessage), websocketpp::frame::opcode::text);
 
@@ -378,10 +396,22 @@ void ClientSocket::ParseMessage(const std::string& data){
     if(topmostType == "signed_data"){
         // handle data messages
 
-         if(json["data"]["type"] == "public_chat"){
+        if(json["data"]["type"] == "public_chat"){
             string sender = json["data"]["sender"];
 
             if(sender == fingerprint){
+                return;
+            }
+
+            Json messageToSign;
+            messageToSign["data"] = json["data"];
+            messageToSign["counter"] = json["counter"];
+            std::string toVerify = messageToSign.dump();
+
+            string decodedSignature = mine::Base64::decode(json["signature"]);
+
+            if (!encryptor.VerifyMessage(toVerify, encryptor.StringToVector(decodedSignature), client->GetKeyFromFingerprint(sender))) {
+                std::cerr << "Signature verification failed." << std::endl;
                 return;
             }
 
@@ -393,14 +423,10 @@ void ClientSocket::ParseMessage(const std::string& data){
 
             // is the message prefixed with https?
 
-            std::cout << chatMessage.message.substr(0, 8) << "\n";
-
             if(chatMessage.message.substr(0, 8) == "https://"){
 
                 int endSectionIndex = chatMessage.message.find_last_of('/');
                 int downloadSectionIndex = chatMessage.message.substr(0, endSectionIndex).find_last_of('/');
-
-                std::cout << chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) << "\n";
 
                 if(chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) == "/download"){
                     
@@ -414,18 +440,18 @@ void ClientSocket::ParseMessage(const std::string& data){
             return;
         } 
 
-        bool shouldDecode = false;
-        auto participants = json["data"]["chat"]["participants"];
-        for(size_t i = 1; i < participants.size(); i++){
-            try{
-                if(participants[i].get<std::string>() == fingerprint){
-                    shouldDecode = true;
-                }
-            } catch (const std::exception& e) {
-                cerr << "Fingerprint check failed: " << e.what() << endl;
-                return;
-            }
-        }
+        // bool shouldDecode = false;
+        // auto participants = json["data"]["chat"]["participants"];
+        // for(size_t i = 1; i < participants.size(); i++){
+        //     try{
+        //         if(participants[i].get<std::string>() == fingerprint){
+        //             shouldDecode = true;
+        //         }
+        //     } catch (const std::exception& e) {
+        //         cerr << "Fingerprint check failed: " << e.what() << endl;
+        //         return;
+        //     }
+        // }
 
         // MIGHT NEED TO BE !shouldDecode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // CHANGE???
@@ -433,6 +459,19 @@ void ClientSocket::ParseMessage(const std::string& data){
         //     cout << "Should not decode" << endl;
         //     return;
         // }
+
+        Json messageToSign;
+        messageToSign["data"] = json["data"];
+        messageToSign["counter"] = json["counter"];
+        std::string toVerify = messageToSign.dump();
+
+        string decodedSignature = mine::Base64::decode(json["signature"]);
+        string senderPublicKey = client->GetKeyFromFingerprint(json["data"]["chat"]["participants"][0]);
+
+        if (!encryptor.VerifyMessage(toVerify, encryptor.StringToVector(decodedSignature), senderPublicKey)) {
+            std::cerr << "Signature verification failed." << std::endl;
+            return;
+        }        
 
         string decodedCiphertext, decodedSymmKey, decodedIV;
         try {
@@ -468,8 +507,7 @@ void ClientSocket::ParseMessage(const std::string& data){
             return;
         }
 
-
-        ChatMessage chatMessage({encryptor.VectorToString(decryptedMessage), client->GetPseudoNameFromFingerprint(participants[0].get<std::string>()), chatApplication->GetCurrentDateTime(false)});
+        ChatMessage chatMessage({encryptor.VectorToString(decryptedMessage),client->GetPseudoNameFromKey(senderPublicKey), chatApplication->GetCurrentDateTime(false)});
 
 
         // handling file download URLS
@@ -478,14 +516,10 @@ void ClientSocket::ParseMessage(const std::string& data){
 
         // is the message prefixed with https?
 
-        std::cout << chatMessage.message.substr(0, 8) << "\n";
-
         if(chatMessage.message.substr(0, 8) == "https://"){
 
             int endSectionIndex = chatMessage.message.find_last_of('/');
             int downloadSectionIndex = chatMessage.message.substr(0, endSectionIndex).find_last_of('/');
-
-            std::cout << chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) << "\n";
 
             if(chatMessage.message.substr(downloadSectionIndex, endSectionIndex - downloadSectionIndex) == "/download"){
 
@@ -497,7 +531,7 @@ void ClientSocket::ParseMessage(const std::string& data){
 
 
 
-        client->PushMessage(chatMessage, client->GetKeyFromFingerprint(participants[0].get<std::string>()));
+        client->PushMessage(chatMessage, senderPublicKey);
     }
 
     if(topmostType == "client_list"){  
@@ -543,7 +577,12 @@ void ClientSocket::ParseMessage(const std::string& data){
 
             // add if not found
             if(std::find(uniqueServerList.begin(), uniqueServerList.end(), activeUsers[i].serverOfOrigin) == uniqueServerList.end()){
-                uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
+
+                // dont allow Public Chats server dummy server of origin to be added
+                if(activeUsers[i].serverOfOrigin != ""){
+
+                    uniqueServerList.push_back(activeUsers[i].serverOfOrigin);
+                }
             }
         }
 

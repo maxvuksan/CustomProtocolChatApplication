@@ -41,7 +41,7 @@ bool Encryption::AESEncrypt(const std::vector<unsigned char>& plaintext, const s
     }
 
     // Initialize encryption operation with AES-256-GCM
-    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr)) {
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), nullptr, nullptr, nullptr)) {
         EVP_CIPHER_CTX_free(ctx);
         return false;
     }
@@ -94,8 +94,8 @@ bool Encryption::AESDecrypt(const std::vector<unsigned char>& ciphertext, const 
     int len = 0;
     int plaintext_len = 0;
 
-    // Initialize decryption operation with AES-256-GCM
-    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr)) {
+    // Initialize decryption operation with AES-128-GCM
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), nullptr, nullptr, nullptr)) {
         EVP_CIPHER_CTX_free(ctx);
         return false;
     }
@@ -187,7 +187,7 @@ bool Encryption::GenerateRSAKeyPair(std::string& publicKey, std::string& private
 
 bool Encryption::RSAEncrypt(const std::vector<unsigned char>& plaintext, const std::string& publicKey, std::vector<unsigned char>& ciphertext) {
     // Load public key from string
-   BIO* pub_bio = BIO_new_mem_buf(publicKey.data(), -1);
+    BIO* pub_bio = BIO_new_mem_buf(publicKey.data(), -1);
     EVP_PKEY* pkey = PEM_read_bio_PUBKEY(pub_bio, NULL, NULL, NULL);
     BIO_free(pub_bio);
 
@@ -306,7 +306,87 @@ bool Encryption::CreateFingerprint(const std::string& publicKeyPEM, std::vector<
     return success;
 }
 
+std::vector<unsigned char> Encryption::SignMessage(const std::string& message, const std::string& privateKey) {
+    BIO* priv_bio = BIO_new_mem_buf(privateKey.data(), -1);
+    EVP_PKEY* evp_private_key = PEM_read_bio_PrivateKey(priv_bio, NULL, NULL, NULL);
+    BIO_free(priv_bio);
+
+    if (!evp_private_key) {
+        std::cerr << "Error reading private key." << std::endl;
+        return {};
+    }
+
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_PKEY_CTX* pkey_ctx = nullptr;
+
+    if (!EVP_DigestSignInit(ctx, &pkey_ctx, EVP_sha256(), NULL, evp_private_key)) {
+        EVP_PKEY_free(evp_private_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error initializing signing context." << std::endl;
+        return {};
+    }
+
+    if (!EVP_DigestSignUpdate(ctx, message.c_str(), message.size())) {
+        EVP_PKEY_free(evp_private_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error during signing." << std::endl;
+        return {};
+    }
+
+    size_t sig_len;
+    if (!EVP_DigestSignFinal(ctx, NULL, &sig_len)) {
+        EVP_PKEY_free(evp_private_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error obtaining signature length." << std::endl;
+        return {};
+    }
+
+    std::vector<unsigned char> signature(sig_len);
+    if (!EVP_DigestSignFinal(ctx, signature.data(), &sig_len)) {
+        EVP_PKEY_free(evp_private_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error finalizing signature." << std::endl;
+        return {};
+    }
+
+    EVP_PKEY_free(evp_private_key);
+    EVP_MD_CTX_free(ctx);
+    signature.resize(sig_len);
+    return signature;
+}
 
 
+bool Encryption::VerifyMessage(const std::string& message, const std::vector<unsigned char>& signature, const std::string& publicKey) {
+    BIO* pub_bio = BIO_new_mem_buf(publicKey.data(), -1);
+    EVP_PKEY* evp_public_key = PEM_read_bio_PUBKEY(pub_bio, NULL, NULL, NULL);
+    BIO_free(pub_bio);
 
+    if (!evp_public_key) {
+        std::cerr << "Error reading public key." << std::endl;
+        return false;
+    }
+
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_PKEY_CTX* pkey_ctx = nullptr;
+
+    if (!EVP_DigestVerifyInit(ctx, &pkey_ctx, EVP_sha256(), NULL, evp_public_key)) {
+        EVP_PKEY_free(evp_public_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error initializing verification context." << std::endl;
+        return false;
+    }
+
+    if (!EVP_DigestVerifyUpdate(ctx, message.c_str(), message.size())) {
+        EVP_PKEY_free(evp_public_key);
+        EVP_MD_CTX_free(ctx);
+        std::cerr << "Error during verification." << std::endl;
+        return false;
+    }
+
+    bool result = EVP_DigestVerifyFinal(ctx, signature.data(), signature.size()) == 1;
+
+    EVP_PKEY_free(evp_public_key);
+    EVP_MD_CTX_free(ctx);
+    return result;
+}
 
