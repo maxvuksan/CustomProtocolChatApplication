@@ -36,6 +36,11 @@ public:
     // fingerprint
     bool CreateFingerprint(const std::string& publicKeyPEM, std::vector<unsigned char>& fingerprint);
 
+    // Signature
+    std::vector<unsigned char> SignMessage(const std::string& message, const std::string& privateKey);
+    bool VerifyMessage(const std::string& message, const std::vector<unsigned char>& signature, const std::string& publicKey);
+
+
     // helper functions
     std::vector<unsigned char> StringToVector(const std::string& str);
     std::string VectorToString(const std::vector<unsigned char>& vec);

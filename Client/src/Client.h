@@ -49,6 +49,8 @@ class Client {
         int GetColourIndex(std::string user);
         std::string GetKeyFromFingerprint(std::string fingerprint);
         std::string GetPseudoNameFromFingerprint(std::string fingerprint);
+        std::string GetFingerprintFromKey(std::string key);
+        std::string GetPseudoNameFromKey(std::string key);
 
     private:
         void ParseMessage(std::string currentUser, ChatMessage currentMessage);
