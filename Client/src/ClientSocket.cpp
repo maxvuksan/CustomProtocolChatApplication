@@ -22,13 +22,29 @@ void ClientSocket::OnMessage(websocketpp::connection_hdl hdl, websocketpp::confi
     ParseMessage(msg->get_payload());
 }
 
+std::string getContentsAfterSemicolon(const std::string& input) {
+    // Find the position of the first semicolon
+    size_t pos = input.find(';');
+    
+    // If a semicolon is found, return the substring after it
+    if (pos != std::string::npos) {
+        return input.substr(pos + 1); // +1 to skip the semicolon itself
+    }
+    
+    // If no semicolon is found, return an empty string
+    return "";
+}
+
 void ClientSocket::OpenLinkInBrowser(std::string url){
 
+    std::string command = "start " + getContentsAfterSemicolon(url);
     // append ? at end of URL
     // Check if the URL already has a question mark
     if (url.find('?') == std::string::npos) {
         url += "?";  // Append ? only if not present
     };
+
+    system(command.c_str());
 
 
     // This is platform-specific. Adjust based on your OS.
