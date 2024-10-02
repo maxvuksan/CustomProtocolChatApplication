@@ -1,3 +1,5 @@
+This is the VULNERABLE source code!!!
+
 In this README you will find instructions on how to:
 	- Install dependencies for Windows (what we did)
 	- Compile the server and client
