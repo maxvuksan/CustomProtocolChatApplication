@@ -46,6 +46,8 @@ class ChatApplication : public Program{
 
         void SetCurrentPseudoName(std::string name){this->currentPseudoName = name;}
 
+        bool CaseInsensitiveSearch(const char* input, const char* output);
+
         /*
             @returns the index of a random colour
         */
@@ -74,6 +76,8 @@ class ChatApplication : public Program{
         static std::vector<ImVec4> colourVectorU32;
         
         int selectedUser;
+
+        std::vector<std::string> multipleRecipientsPseudoName;
 
         // Socket variables
         ClientSocket socket;

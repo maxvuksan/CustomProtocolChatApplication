@@ -172,6 +172,12 @@ void ClientSocket::OnClose(websocketpp::connection_hdl hdl) {
     chatApplication->SetConnectedState(CS_DISCONNECTED);
 }
 
+void ClientSocket::OnFail(websocketpp::connection_hdl hdl){
+    std::cout << "Connection failed\n";
+    // asioClient.reset();
+    chatApplication->SetConnectedState(CS_DISCONNECTED);
+}
+
 void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 
     global_hdl = hdl;
@@ -233,9 +239,6 @@ void ClientSocket::Start(std::string address, std::string port) {
         asioClient.set_access_channels(websocketpp::log::alevel::all);
         asioClient.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
-        // Initialize the Asio transport policy
-        asioClient.init_asio();
-
         // Set up the TLS context to skip verification
         asioClient.set_tls_init_handler([](websocketpp::connection_hdl) {
             auto ctx = websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::sslv23);
@@ -248,6 +251,8 @@ void ClientSocket::Start(std::string address, std::string port) {
         asioClient.set_message_handler(bind(&ClientSocket::OnMessage, this, placeholders::_1, placeholders::_2));
         asioClient.set_open_handler(bind(&ClientSocket::OnOpen, this, placeholders::_1));
         asioClient.set_close_handler(bind(&ClientSocket::OnClose, this, placeholders::_1));
+        asioClient.set_fail_handler(bind(&ClientSocket::OnFail, this, placeholders::_1));
+
 
 
         // Create a connection to the server
@@ -256,6 +261,7 @@ void ClientSocket::Start(std::string address, std::string port) {
 
         if (ec) {
             std::cout << "Could not create connection: " << ec.message() << std::endl;
+            chatApplication->SetConnectedState(CS_DISCONNECTED);
             return;
         }
 
@@ -366,7 +372,7 @@ int ClientSocket::SendChatMessage(string chatMessage, string currentPublicKey) {
     jsonMessage["data"]["destination_servers"] = uniqueServerList; //e.g. {"127.0.0.1:1", "127.0.0.1:2", "127.0.0.1:3"};
     jsonMessage["data"]["iv"] = encodedIV;
 
-    jsonMessage["data"]["symm_keys"] = encodedSymmKey;
+    jsonMessage["data"]["symm_keys"] = nlohmann::json::array({encodedSymmKey});
 
     // Chat is base64 encoded, AES encrypted
     jsonMessage["data"]["chat"]["message"] = encodedCiphertext;
@@ -456,25 +462,38 @@ void ClientSocket::ParseMessage(const std::string& data){
             return;
         } 
 
-        // bool shouldDecode = false;
-        // auto participants = json["data"]["chat"]["participants"];
-        // for(size_t i = 1; i < participants.size(); i++){
-        //     try{
-        //         if(participants[i].get<std::string>() == fingerprint){
-        //             shouldDecode = true;
-        //         }
-        //     } catch (const std::exception& e) {
-        //         cerr << "Fingerprint check failed: " << e.what() << endl;
-        //         return;
-        //     }
-        // }
+        // check if can decrypt one of the symmetric keys
+        bool shouldDecode = false;
+        string decodedSymmKey;
+        std::vector<unsigned char> decryptedSymmKey;
+        auto participants = json["data"]["symm_keys"];
+        
+        for(size_t i = 0; i < participants.size(); i++){
 
-        // MIGHT NEED TO BE !shouldDecode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // CHANGE???
-        // if(shouldDecode){
-        //     cout << "Should not decode" << endl;
-        //     return;
-        // }
+            try{
+                decodedSymmKey = mine::Base64::decode(participants[i]);
+
+                // keep going through till you find one, unless it is the last one, then return
+                if (!encryptor.RSADecrypt(encryptor.StringToVector(decodedSymmKey), privateKey, decryptedSymmKey)) {
+                    std::cerr << "RSA Decryption failed." << std::endl;
+                    decryptedSymmKey = {};
+
+                }
+
+                if(!decryptedSymmKey.empty()){
+                    shouldDecode = true;
+                }
+
+            } catch (const std::exception& e) {
+                cerr << "Symm Key decryption failed: " << e.what() << endl;
+                return;
+            }
+        }
+
+        if(!shouldDecode){
+            cout << "Should not decode" << endl;
+            return;
+        }
 
         Json messageToSign;
         messageToSign["data"] = json["data"];
@@ -489,19 +508,12 @@ void ClientSocket::ParseMessage(const std::string& data){
             return;
         }        
 
-        string decodedCiphertext, decodedSymmKey, decodedIV;
+        string decodedCiphertext, decodedIV;
         try {
             decodedCiphertext = mine::Base64::decode(json["data"]["chat"]["message"]);
-            decodedSymmKey = mine::Base64::decode(json["data"]["symm_keys"]);
             decodedIV = mine::Base64::decode(json["data"]["iv"]);
         } catch (const std::exception& e) {
             cerr << "Base64 decoding failed: " << e.what() << endl;
-            return;
-        }
-
-        std::vector<unsigned char> decryptedSymmKey;
-        if (!encryptor.RSADecrypt(encryptor.StringToVector(decodedSymmKey), privateKey, decryptedSymmKey)) {
-            std::cerr << "RSA Decryption failed." << std::endl;
             return;
         }
 
@@ -582,6 +594,7 @@ void ClientSocket::ParseMessage(const std::string& data){
         client->MarkClient(client->GetClientIndex(publicKey), true);
 
         client->MarkClient(0, false);
+        client->MarkClient(1, false);
 
         // remove all the clients which are still marked
         client->RemoveMarkedClients();
