@@ -80,6 +80,7 @@ private:
 
                         contentPos = request.find("\r\n\r\n", contentPos) + 4;
 
+                        
                         int contentPosEnd = request.find(boundary, contentPos);
                         if (contentPosEnd != string::npos) {
                             contentPosEnd -= 3;
@@ -87,6 +88,7 @@ private:
                             finishedReading = true;
                         } else {
                             fileContent = request.substr(contentPos);
+                            previousRead = request.substr(1000);
                         }
                         
 
@@ -104,18 +106,24 @@ private:
                     }
                     else if (mode == "upload" && startedContent == true) {
 
-                        string fileContent;
+                        string fileContent = "";
+
+                        cout << "Previousread + request" << (previousRead + request) << endl;
 
                         int contentPosEnd = request.find(boundary);
                         if (contentPosEnd != string::npos) {
                             contentPosEnd -= 3;
                             fileContent = request.substr(0, contentPosEnd);
                             finishedReading = true;
+                            save_file(savedFileName, fileContent);
+                        } else if ((previousRead + request).find(boundary) != string::npos) {
+                            finishedReading = true;
+                            save_file(savedFileName, fileContent);
                         } else {
                             fileContent = request;
+                            previousRead = request.substr(1000);
+                            save_file(savedFileName, fileContent);
                         }
-
-                        save_file(savedFileName, fileContent);
 
                         if (finishedReading != true) {
                             do_read();
@@ -128,9 +136,23 @@ private:
                         int endPos = request.find("?", startPos);
 
                         string fileName = request.substr(startPos, endPos - startPos);
-                        cout << fileName << endl;
 
                         fs::path path = "uploads"; 
+
+                        try {
+                            fs::path canonicalPath = fs::canonical(path / fileName);
+
+                            if (canonicalPath.string().find(fs::canonical(path).string()) != 0) {
+                                std::cerr << "Attempt to access a file outside of the uploads directory: " << fileName << std::endl;
+                                return;
+                            }
+                        } catch (const exception & e) {
+                            cerr << "Download Error: Cannot resolve canonical path" << endl; 
+                        }
+                        
+
+
+
                         std::ifstream file(path / fileName, std::ios::binary);
 
                         if (!file) {
@@ -149,17 +171,6 @@ private:
                             asio::error_code ec;
                             asio::write(socket_, asio::buffer(buffer), ec);
                         }
-                    }
-
-                    
-                } else {
-
-                    // Checking if the upload failed
-                    if (finishedReading == false && error.value() == 10054) {
-                        cerr << "Read failed: " << error.message() << endl;
-                        socket_.shutdown();
-                    } else {
-                        cerr << "Read failed: " << error.message() << endl;
                     }
 
                     
@@ -308,6 +319,7 @@ private:
     bool finishedReading = false;
     bool foundEnd = false;
     string savedFileName;
+    string previousRead;
 
     string boundary;
     string mode = "";
