@@ -16,7 +16,7 @@ In this README you will find instructions on how to:
 
 	We could were unable to find this exact build so we've uploaded a zip file (if you do it this way
 	follow the below instructions to add it to your system path)
-		- https://drive.google.com/file/d/1OWfUZDzO-zTUAAP0gxaqcdBLwayYyLix/view?usp=sharing
+		- https://www.dropbox.com/scl/fi/n4gfhcrpt2qofi9m0yjwb/mingw32.zip?rlkey=btj1nuxzxli85ppwb9beqiuyd&st=17e7dmtw&dl=0
 
 	1. 	Search "edit the system environment variables" and click the control panel result 
 	2.	Click "Environment Variables..." at the bottom right of window
