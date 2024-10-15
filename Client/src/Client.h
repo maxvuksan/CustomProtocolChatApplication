@@ -5,7 +5,6 @@
 #include <vector> 
 #include <unordered_map>
 
-#include <cryptopp/aes.h>
 
 class Client {
 
@@ -51,6 +50,7 @@ class Client {
         std::string GetPseudoNameFromFingerprint(std::string fingerprint);
         std::string GetFingerprintFromKey(std::string key);
         std::string GetPseudoNameFromKey(std::string key);
+        std::string GetKeyFromPseudoName(std::string pseudoName);
 
     private:
         void ParseMessage(std::string currentUser, ChatMessage currentMessage);
