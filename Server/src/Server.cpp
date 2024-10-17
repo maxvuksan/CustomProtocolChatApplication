@@ -26,7 +26,7 @@ int Server::StartServer() {
 
     int filePort;
     cout << "Enter file serve port " << endl;
-    cin >> port;
+    cin >> filePort;
 
 
     address += ":" + to_string(port);
