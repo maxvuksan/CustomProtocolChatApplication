@@ -18,14 +18,16 @@ namespace fs = std::filesystem;
 
 class HttpsSession : public std::enable_shared_from_this<HttpsSession> {
 public:
-    HttpsSession(tcp::socket socket, asio::ssl::context& ssl_context, string serverIp)
-        : socket_(std::move(socket), ssl_context) { ip = serverIp; }
+    HttpsSession(tcp::socket socket, asio::ssl::context& ssl_context, string serverIp, short port_)
+        : socket_(std::move(socket), ssl_context) { ip = serverIp; port = port_; }
 
     void start() {
         do_handshake();
     }
 
 private:
+    short port;
+
     void do_handshake() {
         auto self(shared_from_this());
 
@@ -199,7 +201,9 @@ private:
             asio::error_code ec;
             
             string url;
-            url = "https://" + ip + ":443/download/" + file_name;
+
+            string portString = to_string(port);
+            url = "https://" + ip + ":" + portString + "/download/" + file_name;
 
             Json jsonResponse;
             jsonResponse["response"]["body"]["file_url"] = url;
@@ -332,15 +336,12 @@ private:
 
 class HttpsServer {
 public:
-    HttpsServer(asio::io_context& io_context, short port, asio::ssl::context& ssl_context, string serverIp)
-        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
+    HttpsServer(asio::io_context& io_context, short port_, asio::ssl::context& ssl_context, string serverIp)
+        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port_)),
           ssl_context_(ssl_context) {
         ip = serverIp;
+        port = port_;
         do_accept();
-    }
-
-    void StartServer() {
-        
     }
 
 private:
@@ -348,13 +349,14 @@ private:
         acceptor_.async_accept(
             [this](const asio::error_code& error, tcp::socket socket) {
                 if (!error) {
-                    std::make_shared<HttpsSession>(std::move(socket), ssl_context_, ip)->start();
+                    std::make_shared<HttpsSession>(std::move(socket), ssl_context_, ip, port)->start();
                 }
                 do_accept();
             });
     }
 
     string ip;
+    short port;
 
     asio::io_context io_context;
     tcp::acceptor acceptor_;
