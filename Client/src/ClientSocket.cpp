@@ -229,7 +229,10 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 /// ClientSocket functions
 void ClientSocket::Start(std::string address, std::string port, std::string fileUploadPort) {
 
-    fileUploadPort = fileUploadPort;
+    if(fileUploadPort == ""){
+        fileUploadPort = "443";
+    }
+    this->fileUploadPort = fileUploadPort;
 
     std::string finalAddress = address + ":" + port;
     connectedAddress = address;
