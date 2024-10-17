@@ -443,7 +443,7 @@ void ChatApplication::Update(){
 
 
     if(selectedUser == 1){
-
+        
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x);
 
         static const char* current_item = NULL;
@@ -492,7 +492,7 @@ void ChatApplication::Update(){
                     bool is_selected = (currentItemIndex == n);
                     if (ImGui::Selectable(currentClient.GetActiveUsers()[n].pseudoName.c_str(), is_selected)) {
                         currentItemIndex = n;  // Update the selected item index
-
+                        
                         if (std::find(multipleRecipientsPseudoName.begin(), multipleRecipientsPseudoName.end(), currentClient.GetActiveUsers()[n].pseudoName) == multipleRecipientsPseudoName.end()){
                             multipleRecipientsPseudoName.push_back(currentClient.GetActiveUsers()[n].pseudoName);
                         }
@@ -532,7 +532,9 @@ void ChatApplication::Update(){
     if(selectedUser == 1){
         // draw buttons for each recipient
         for(int i = 0; i < multipleRecipientsPseudoName.size(); i++){
-            if(ImGui::Button(multipleRecipientsPseudoName[i].c_str()) + " X "){
+            
+            std::string buttonLabel = multipleRecipientsPseudoName[i] + " x ";
+            if(ImGui::Button(buttonLabel.c_str())){
                 multipleRecipientsPseudoName.erase(multipleRecipientsPseudoName.begin()+i);
             }
             
