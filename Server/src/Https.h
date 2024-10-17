@@ -363,7 +363,7 @@ private:
 
 class Https {
     public:
-        Https(string);
+        Https(string, int);
         void StartServer();
 
     private:
