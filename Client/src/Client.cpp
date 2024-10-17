@@ -7,7 +7,8 @@ Client::Client(){
     allMessages.clear();
     activeUsers.clear();
 
-    activeUsers = {{"Public Chat", "Public Chat", "Public Chat", "0", 1}};
+    activeUsers = {{"Public Chat", "Public Chat", "Public Chat", "0", 1},
+                    {"New Chat", "New Chat", "New Chat", "0", 1}};
 
     allMessages[""].push_back(ChatMessage({}));
 }
@@ -157,6 +158,16 @@ std::string Client::GetPseudoNameFromKey(std::string key){
     return "";
 }
 
+std::string Client::GetKeyFromPseudoName(std::string pseudoName){
+    for(int i = 0; i < activeUsers.size(); i++){
+        if(activeUsers[i].pseudoName == pseudoName){
+            return activeUsers[i].publicKey;
+        }
+    }
+
+    return "";
+}
+
 int Client::UpdateDate(std::string user, std::string date, std::string selectedUser){
 
     for(int i = 0; i < activeUsers.size(); i++){
@@ -165,7 +176,7 @@ int Client::UpdateDate(std::string user, std::string date, std::string selectedU
         }
     }
 
-    std::sort(activeUsers.begin()+1, activeUsers.end(),
+    std::sort(activeUsers.begin()+2, activeUsers.end(),
         [this](const ActiveUsers& a, const ActiveUsers& b) {
             return this->compareByDate(a, b);
         });

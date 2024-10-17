@@ -14,6 +14,7 @@ class ChatApplication;
 
 class ClientSocket {
     public:
+        ClientSocket(){asioClient.init_asio();};
         void Start(std::string address, std::string port, std::string fileUploadPort = "443");
         void End();
 
@@ -28,6 +29,7 @@ class ClientSocket {
 
         void OnClose(websocketpp::connection_hdl hdl);
         void OnOpen(websocketpp::connection_hdl hdl);
+        void OnFail(websocketpp::connection_hdl hdl);
 
         static void OpenLinkInBrowser(std::string url);
         void SelectFile();

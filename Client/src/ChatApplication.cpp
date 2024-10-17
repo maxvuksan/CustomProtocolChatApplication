@@ -249,6 +249,15 @@ void ChatApplication::DrawCustomUserButtons(bool& scroll){
 
                 draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255, 255, 255, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
 
+            } else if(currentClient.GetActiveUsers()[i].publicKey == "New Chat"){
+                ImVec4 currentColour = colourVectorU32[5];
+                
+                draw_list->AddRectFilled(button_pos, ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(255, 255, 255, 30));
+                draw_list->AddRectFilled(ImVec2(button_pos.x + button_size.x - 4, button_pos.y), ImVec2(button_pos.x + button_size.x, button_pos.y + button_size.y), IM_COL32(255, 255, 255, 255), 0.0f, 0); // Border
+                
+
+                draw_list->AddText(fontList[FONT_PRIMARY].imguiFontRef, (float)fontList[FONT_PRIMARY].characterSize, text1_pos, IM_COL32(255, 255, 255, 255), currentClient.GetActiveUsers()[selectedUser].pseudoName.c_str());
+
             } else {
                 int currentColourIndex = currentClient.GetColourIndex(currentClient.GetActiveUsers()[selectedUser].pseudoName);
                 ImVec4 currentColour = colourVectorU32[currentColourIndex];
@@ -414,17 +423,36 @@ void ChatApplication::DrawConnectToServerModal(){
     }
 }
 
+bool ChatApplication::CaseInsensitiveSearch(const char* haystack, const char* needle) {
+    std::string haystack_str(haystack);
+    std::string needle_str(needle);
+
+    // Convert both strings to lowercase
+    std::transform(haystack_str.begin(), haystack_str.end(), haystack_str.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    std::transform(needle_str.begin(), needle_str.end(), needle_str.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+
+    // Check if the needle is in the haystack
+    return haystack_str.find(needle_str) != std::string::npos;
+}
 
 void ChatApplication::Update(){
 
-    if(connectedState == CS_DISCONNECTED){
+    if(connectedState != CS_CONNECTED){
         ImGui::OpenPopup("Select Server");
     }
 
     static char inputBuffer[256] = "";  // Buffer to hold the input text
     static bool scroll = true;
+    static char recipientsBuffer[64] = "";  // Buffer to hold the recipients for a message with multiple recipients
+    static std::vector<std::string> selectedUserPublicKeys;
+    static bool openUserDropDown = false;
+    static bool currentlyTyping = false;
     
     //glfwSetCursor(GetWindow(), glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
+
+    // TODO - WHEN CONNECTING, NO MESSAGE INPUT BOX
 
     if(currentClient.GetActiveUsers().size() > 0 && (currentClient.GetActiveUsers()[0].publicKey != "")){
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
@@ -438,6 +466,78 @@ void ChatApplication::Update(){
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
     ImGui::Begin("Messages", nullptr, ImGuiWindowFlags_NoScrollbar); 
+
+
+    if(selectedUser == 1){
+        
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x);
+
+        static const char* current_item = NULL;
+
+        static char input_buf[128] = "";
+        static int currentItemIndex = -1;
+
+        static bool show_autocomplete = false;
+        static int firstMatchIndex = -1;
+
+        // Input box for typing, triggers autocomplete
+        if (ImGui::InputText("##input_autocomplete", input_buf, IM_ARRAYSIZE(input_buf))) {
+            // Show autocomplete dropdown when typing
+            show_autocomplete = strlen(input_buf) > 0;
+
+        }
+
+        if (show_autocomplete && ImGui::IsKeyPressed(ImGuiKey_Enter) && firstMatchIndex >= 0) {
+            currentItemIndex = firstMatchIndex;  // Set the first matching item as the selected item
+            
+            if (std::find(multipleRecipientsPseudoName.begin(), multipleRecipientsPseudoName.end(), currentClient.GetActiveUsers()[currentItemIndex].pseudoName) == multipleRecipientsPseudoName.end()){
+                multipleRecipientsPseudoName.push_back(currentClient.GetActiveUsers()[currentItemIndex].pseudoName);
+            }
+            input_buf[0] = '\0';
+            ImGui::SetKeyboardFocusHere(-1);
+            show_autocomplete = false;  // Hide the dropdown
+        }
+
+        // Get the position of the input box and set the dropdown position below it
+        ImVec2 input_pos = ImGui::GetItemRectMin();
+        ImVec2 input_size = ImGui::GetItemRectSize();
+        ImGui::SetNextWindowPos(ImVec2(input_pos.x, input_pos.y + input_size.y));
+
+        // Display the autocomplete dropdown if there is input
+        if (show_autocomplete) {
+            firstMatchIndex = -1; 
+            ImGui::BeginChild("##autocomplete_list", ImVec2(input_size.x, ImGui::GetTextLineHeightWithSpacing() * 4), true);
+
+            for (int n = 2; n < currentClient.GetActiveUsers().size(); n++) {
+                // Use case-insensitive search for filtering
+                if (CaseInsensitiveSearch(currentClient.GetActiveUsers()[n].pseudoName.c_str(), input_buf)) {
+                    if (firstMatchIndex == -1) {
+                        firstMatchIndex = n;  // Store the first matching item
+                    }
+
+                    bool is_selected = (currentItemIndex == n);
+                    if (ImGui::Selectable(currentClient.GetActiveUsers()[n].pseudoName.c_str(), is_selected)) {
+                        currentItemIndex = n;  // Update the selected item index
+                        
+                        if (std::find(multipleRecipientsPseudoName.begin(), multipleRecipientsPseudoName.end(), currentClient.GetActiveUsers()[n].pseudoName) == multipleRecipientsPseudoName.end()){
+                            multipleRecipientsPseudoName.push_back(currentClient.GetActiveUsers()[n].pseudoName);
+                        }
+
+                        input_buf[0] = '\0';
+                        ImGui::SetKeyboardFocusHere(-1);
+                        show_autocomplete = false;  // Hide the autocomplete dropdown after selection
+                    }
+                }
+            }
+
+            ImGui::EndChild();
+        }
+
+    } else {
+        multipleRecipientsPseudoName.clear();
+    }
+
+    
     ImGui::PopStyleVar(1);
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(GLOBAL_PADDING, GLOBAL_PADDING));
@@ -454,48 +554,59 @@ void ChatApplication::Update(){
 
     auto messages = currentClient.GetAllMessages();
 
-    for(int i = 0; i < messages[currentClient.GetActiveUsers()[selectedUser].publicKey].size(); i++){
-        
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,5));
-        
-        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy == "me (" + currentPseudoName +")"){
-            PushFont(FONT_BOLD, colourVector[5]);
-        } else {
-            PushFont(FONT_BOLD, colourVector[currentClient.GetColourIndex(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy)]);
+    if(selectedUser == 1){
+        // draw buttons for each recipient
+        for(int i = 0; i < multipleRecipientsPseudoName.size(); i++){
+            
+            std::string buttonLabel = multipleRecipientsPseudoName[i] + " x ";
+            if(ImGui::Button(buttonLabel.c_str())){
+                multipleRecipientsPseudoName.erase(multipleRecipientsPseudoName.begin()+i);
+            }
+            
         }
+    } else {
+        for(int i = 0; i < messages[currentClient.GetActiveUsers()[selectedUser].publicKey].size(); i++){
+        
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,5));
+            
+            if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy == "me (" + currentPseudoName +")"){
+                PushFont(FONT_BOLD, colourVector[5]);
+            } else {
+                PushFont(FONT_BOLD, colourVector[currentClient.GetColourIndex(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy)]);
+            }
 
         ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy.c_str());
-
         ImGui::SameLine();
         ImGui::Text("   ");
         ImGui::SameLine();
-
         PopFont();
 
-        // draw date
-        PushFont(FONT_SECONDARY);
-        ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).date.c_str());
-        PopFont();
+            // draw date
+            PushFont(FONT_SECONDARY);
+            ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).date.c_str());
+            PopFont();
 
-        ImGui::PopStyleVar(1);
-        
-        PushFont(FONT_PRIMARY);
+            ImGui::PopStyleVar(1);
+            
+            PushFont(FONT_PRIMARY);
 
-        // draw file
-        if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).isFile){
+            // draw file
+            if(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).isFile){
 
-            // open file on click
-            if(ImGui::Button(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).filename.c_str())){
-                ClientSocket::OpenLinkInBrowser(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).fileURL.c_str());
+                // open file on click
+                if(ImGui::Button(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).filename.c_str())){
+                    ClientSocket::OpenLinkInBrowser(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).fileURL.c_str());
+                }
+
             }
-
+            else{ // draw message
+                ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).message.c_str());
+            }        
+            PopFont();
         }
-        else{ // draw message
-            ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).message.c_str());
-        }        
-        PopFont();
-
     }
+
+    
 
     if(scroll){
         ImGui::SetScrollHereY(1.0f);
@@ -506,8 +617,6 @@ void ChatApplication::Update(){
     ImGui::PopStyleVar(3);
     ImGui::PopStyleVar(1);
     ImGui::PopStyleColor(1);
-
-    // Add a separator and a text box at the bottom of the window
 
 
     if(ImGui::Button(" + ")){
@@ -531,28 +640,40 @@ void ChatApplication::Update(){
         if (!newMessage.empty()) {
             // Add the new message to the selected user's message list (pseudo-code)
 
+            
             bool loopingSend = false; // FOR TESTING: sends message multiple times ...?
 
-            if(loopingSend){
+            if(selectedUser == 1){
 
-                while(true){
+                for(int i = 0; i < multipleRecipientsPseudoName.size(); i++){
                     // Sending chat message to server
-                    socket.SendChatMessage(newMessage, currentClient.GetActiveUsers()[selectedUser].publicKey);
+                    socket.SendChatMessage(newMessage, currentClient.GetKeyFromPseudoName(multipleRecipientsPseudoName[i]));
+
+                    currentClient.PushMessage({newMessage, "me (" + currentPseudoName +")", GetCurrentDateTime(false)}, currentClient.GetKeyFromPseudoName(multipleRecipientsPseudoName[i]));
+                
+                    currentClient.UpdateDate(currentClient.GetKeyFromPseudoName(multipleRecipientsPseudoName[i]), GetCurrentDateTime(true), currentClient.GetKeyFromPseudoName(multipleRecipientsPseudoName[i]));
+
                 }
-            }
-            else{
+
+                // Clear the input buffer
+                inputBuffer[0] = '\0';
+                ImGui::SetKeyboardFocusHere(-1);
+                scroll = true;
+
+            } else {
                 // Sending chat message to server
                 socket.SendChatMessage(newMessage, currentClient.GetActiveUsers()[selectedUser].publicKey);
+
+                currentClient.PushMessage({newMessage, "me (" + currentPseudoName +")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].publicKey);
+
+                selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].publicKey, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].publicKey);
+
+                // Clear the input buffer
+                inputBuffer[0] = '\0';
+                ImGui::SetKeyboardFocusHere(-1);
+                scroll = true;
             }
-
-            currentClient.PushMessage({newMessage, "me (" + currentPseudoName +")", GetCurrentDateTime(false)}, currentClient.GetActiveUsers()[selectedUser].publicKey);
-
-            selectedUser = currentClient.UpdateDate(currentClient.GetActiveUsers()[selectedUser].publicKey, GetCurrentDateTime(true), currentClient.GetActiveUsers()[selectedUser].publicKey);
-
-            // Clear the input buffer
-            inputBuffer[0] = '\0';
-            ImGui::SetKeyboardFocusHere(-1);
-            scroll = true;
+            
         }
     } 
     ImGui::End();

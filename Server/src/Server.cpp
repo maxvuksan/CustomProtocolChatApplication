@@ -21,8 +21,13 @@ int Server::StartServer() {
     }
 
     int port;
-    cout << "Enter server port " << endl;
+    cout << "Enter main server port " << endl;
     cin >> port;
+
+    int filePort;
+    cout << "Enter file serve port " << endl;
+    cin >> port;
+
 
     address += ":" + to_string(port);
 
@@ -32,7 +37,7 @@ int Server::StartServer() {
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, socketList, address, publicKey);
 
-    httpsServer = new Https(ip);
+    httpsServer = new Https(ip, filePort);
     httpsThread = thread(&Https::StartServer, httpsServer);
 
 

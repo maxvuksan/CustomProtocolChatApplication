@@ -9,9 +9,6 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     Json json = Json::parse(msg->get_payload());
     string type = json["type"];
 
-    cout << "Recieved a message from a client" << endl;
-    cout << json << endl;
-
     // Unsigned data
     if (type == "client_update") {
         
@@ -39,8 +36,7 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
     }
 
     type = json["data"]["type"];
-    // cout << json["counter"] << endl;
-
+    
     if (type == "hello") {
         string publicKey = json["data"]["public_key"];
         AddClient(publicKey, hdl);
@@ -57,9 +53,17 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
         AddNewExternalClientList(hdl, json["data"]["sender"]);
     }
 
+    int counter = json["counter"];
+  
+    bool isValid = ValidCount(hdl, counter);
+    if (!isValid) {
+        server.close(hdl, websocketpp::close::status::normal, "Invalid structure");
+        return;
+    }
+
     if (type == "chat") {
         Json addresses = json["data"]["destination_servers"];
-        SendChatMessage(json, addresses);
+        SendChatMessage(json, addresses, hdl);
     }
 
     if (type == "public_chat") {
@@ -84,10 +88,41 @@ void ServerHost::OnMessage(websocketpp::connection_hdl hdl, server_type::message
 
 }
 
+bool ServerHost::ValidCount(websocketpp::connection_hdl hdl, int count) {
+
+    int iterator = 0;
+    for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
+        if (hdl.lock() != it->lock()) {
+            iterator++;
+            continue;
+        }
+
+        if (count > *next(clientCounts.begin(), iterator)) {
+            *next(clientCounts.begin(), iterator) = count;
+            return true;
+        }
+
+        return false;
+    }    
+
+    iterator = 0;
+    for (list<ClientList>::iterator it = externalClientLists.begin(); it != externalClientLists.end(); it++) {
+        if (hdl.lock() != it->connection.lock()) {
+            iterator++;
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+
+}
+
 bool ServerHost::CheckIfHdlMatches(list<websocketpp::connection_hdl> connectionList, websocketpp::connection_hdl hdl) {
 
     for (list<websocketpp::connection_hdl>::iterator it = connectionList.begin(); it != connectionList.end(); it++) {
-        if (hdl.owner_before(*it) || it->owner_before(hdl)) {
+        if (hdl.lock() != it->lock()) {
             continue;
         }
 
@@ -160,6 +195,7 @@ void ServerHost::OnClose(websocketpp::connection_hdl connection) {
     if (remove == true) {
         clientList.erase(next(clientList.begin(), count));
         clientConnections.erase(next(clientConnections.begin(), count));
+        clientCounts.erase(next(clientCounts.begin(), count));
 
         SendClientUpdate();
         SendAllClientListsToAllClients();
@@ -178,22 +214,12 @@ void ServerHost::OnClose(websocketpp::connection_hdl connection) {
         count++;
     }
 
-    
-
     if (remove == true) {
-        
-        cout << "Removing server number: " << count << endl;
 
-        // next(serverSockets->begin(), count)->Stop();
-        // serverSockets->erase(next(serverSockets->begin(), count));
         externalClientLists.erase(next(externalClientLists.begin(), count));
+        serverCounts.erase(next(serverCounts.begin(), count));
         foo.erase(next(foo.begin(), count));
 
-        cout << "Left with servers: ";
-        for (list<int>::iterator it = foo.begin(); it != foo.end(); it++) {
-            cout << *it << ", ";
-        }
-        cout << endl;
 
         SendAllClientListsToAllClients();
 
@@ -211,21 +237,19 @@ void ServerHost::SendPublicChatMessage(Json message) {
 
 }
 
-void ServerHost::SendChatMessage(Json message, Json addresses) {
+void ServerHost::SendChatMessage(Json message, Json addresses, websocketpp::connection_hdl hdl) {
      for (auto& x : addresses.items()) {
         string address = x.value();
 
         // Remove destination addresses from the message (Stops looping)
-        message["data"]["destination_servers"] = { address };
+        // message["data"]["destination_servers"] = { address };
 
         if (address == myAddress) { // Send message to all clients
             
             for (list<websocketpp::connection_hdl>::iterator it = clientConnections.begin(); it != clientConnections.end(); it++) {
                 server.send(*it, to_string(message), websocketpp::frame::opcode::text);
             }
-
-
-        } else {                    // Send message to destination servers
+        } else if (CheckIfHdlMatches(clientConnections, hdl)) {                    // Send message to destination servers
 
             for (list<ServerSocket>::iterator it = serverSockets->begin(); it != serverSockets->end(); it++) {
                 if (it->IsConnected() != true) {
@@ -317,6 +341,7 @@ void ServerHost::AddNewExternalClientList(websocketpp::connection_hdl connection
     externalClientListElement.address = address;
 
     externalClientLists.push_back(externalClientListElement);
+    serverCounts.push_back(-1);
 
     cout << "Added server: " << count << endl;
     foo.push_back(count);
@@ -414,6 +439,7 @@ void ServerHost::StartServer(int port, list<ServerSocket> * socketList, string a
 void ServerHost::AddClient(string publicKey, websocketpp::connection_hdl hdl) {
     clientList.push_back(publicKey);
     clientConnections.push_back(hdl);
+    clientCounts.push_back(-1);
 
     SendClientUpdate();
     SendAllClientListsToAllClients();
