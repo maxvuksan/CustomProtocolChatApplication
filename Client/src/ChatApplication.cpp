@@ -303,7 +303,7 @@ void ChatApplication::DrawConnectToServerModal(){
 
     static char serverAddressBuffer[256] = "";
     static char serverPortBuffer[256] = "";
-    static char serverFileUploadPortBuffer[256] = "";
+    static char serverFileUploadPortBuffer[256] = "443";
     static bool addressInput = false;
     static bool portInput = false;
     static bool focusOnPort = false;
@@ -358,29 +358,6 @@ void ChatApplication::DrawConnectToServerModal(){
                     std::string port(serverPortBuffer);
                     std::string finalAddress = address + ":" + port;
                     std::string fileUploadPort(serverFileUploadPortBuffer);
-
-                    serverAddressToJoin = finalAddress;
-
-                    ImGui::CloseCurrentPopup();
-                    socketThread = std::thread(&ClientSocket::Start, &socket, address, port, fileUploadPort); 
-
-                } else {
-                    showWarning = true;
-                    ImGui::SetKeyboardFocusHere(-1);
-                }
-            }
-
-            ImGui::Text("File Upload Port");
-            if(ImGui::InputText("##FileUploadPort", serverFileUploadPortBuffer, IM_ARRAYSIZE(serverFileUploadPortBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
-    
-                portInput = strlen(serverPortBuffer) > 0;
-                addressInput = strlen(serverAddressBuffer) > 0;
-
-                if(portInput && addressInput){
-                    std::string address(serverAddressBuffer);
-                    std::string port(serverPortBuffer);
-                    std::string fileUploadPort(serverFileUploadPortBuffer);
-                    std::string finalAddress = address + ":" + port;
 
                     serverAddressToJoin = finalAddress;
 
