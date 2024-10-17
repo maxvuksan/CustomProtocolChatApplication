@@ -294,13 +294,14 @@ void ChatApplication::DrawConnectToServerModal(){
 
     static char serverAddressBuffer[256] = "";
     static char serverPortBuffer[256] = "";
+    static char serverFileUploadPortBuffer[256] = "";
     static bool addressInput = false;
     static bool portInput = false;
     static bool focusOnPort = false;
     static bool showWarning = false;
 
 
-    ImVec2 modalSize = ImVec2(400,200);
+    ImVec2 modalSize = ImVec2(400,250);
 
     // Set size of the modal
     ImGui::SetNextWindowSize(modalSize, ImGuiCond_Always);
@@ -347,11 +348,35 @@ void ChatApplication::DrawConnectToServerModal(){
                     std::string address(serverAddressBuffer);
                     std::string port(serverPortBuffer);
                     std::string finalAddress = address + ":" + port;
+                    std::string fileUploadPort(serverFileUploadPortBuffer);
 
                     serverAddressToJoin = finalAddress;
 
                     ImGui::CloseCurrentPopup();
-                    socketThread = std::thread(&ClientSocket::Start, &socket, address, port); 
+                    socketThread = std::thread(&ClientSocket::Start, &socket, address, port, fileUploadPort); 
+
+                } else {
+                    showWarning = true;
+                    ImGui::SetKeyboardFocusHere(-1);
+                }
+            }
+
+            ImGui::Text("File Upload Port");
+            if(ImGui::InputText("##FileUploadPort", serverFileUploadPortBuffer, IM_ARRAYSIZE(serverFileUploadPortBuffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+    
+                portInput = strlen(serverPortBuffer) > 0;
+                addressInput = strlen(serverAddressBuffer) > 0;
+
+                if(portInput && addressInput){
+                    std::string address(serverAddressBuffer);
+                    std::string port(serverPortBuffer);
+                    std::string fileUploadPort(serverFileUploadPortBuffer);
+                    std::string finalAddress = address + ":" + port;
+
+                    serverAddressToJoin = finalAddress;
+
+                    ImGui::CloseCurrentPopup();
+                    socketThread = std::thread(&ClientSocket::Start, &socket, address, port, fileUploadPort); 
 
                 } else {
                     showWarning = true;
@@ -368,9 +393,10 @@ void ChatApplication::DrawConnectToServerModal(){
                 std::string address(serverAddressBuffer);
                 std::string port(serverPortBuffer);
                 std::string finalAddress = address + ":" + port;
+                std::string fileUploadPort(serverFileUploadPortBuffer);
 
                 ImGui::CloseCurrentPopup();
-                socketThread = std::thread(&ClientSocket::Start, &socket, address, port); 
+                socketThread = std::thread(&ClientSocket::Start, &socket, address, port, fileUploadPort); 
             }
 
             if(showWarning){
@@ -387,6 +413,7 @@ void ChatApplication::DrawConnectToServerModal(){
         ImGui::EndPopup();
     }
 }
+
 
 void ChatApplication::Update(){
 
@@ -424,7 +451,6 @@ void ChatApplication::Update(){
     ImGui::PushStyleColor(ImGuiCol_Border, GLOBAL_BACKGROUND_EXTRA_LIGHT_COLOUR);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
     ImGui::BeginChild("MessagesScrollArea", scrollAreaSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
-    
 
     auto messages = currentClient.GetAllMessages();
 
@@ -439,9 +465,11 @@ void ChatApplication::Update(){
         }
 
         ImGui::Text(currentClient.GetChatMessage(currentClient.GetActiveUsers()[selectedUser].publicKey, i).sentBy.c_str());
+
         ImGui::SameLine();
         ImGui::Text("   ");
         ImGui::SameLine();
+
         PopFont();
 
         // draw date
@@ -503,7 +531,6 @@ void ChatApplication::Update(){
         if (!newMessage.empty()) {
             // Add the new message to the selected user's message list (pseudo-code)
 
-            
             bool loopingSend = false; // FOR TESTING: sends message multiple times ...?
 
             if(loopingSend){

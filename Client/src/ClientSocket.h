@@ -14,7 +14,7 @@ class ChatApplication;
 
 class ClientSocket {
     public:
-        void Start(std::string address, std::string port);
+        void Start(std::string address, std::string port, std::string fileUploadPort = "443");
         void End();
 
         int SendChatMessage(std::string chatMessage, std::string publicKey);
@@ -37,6 +37,7 @@ class ClientSocket {
         std::string publicKey;
     private:
 
+        std::string fileUploadPort;
         std::string connectedAddress; // without port
 
         std::string privateKey;

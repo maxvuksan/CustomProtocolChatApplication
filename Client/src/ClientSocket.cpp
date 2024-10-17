@@ -30,7 +30,6 @@ void ClientSocket::OpenLinkInBrowser(std::string url){
         url += "?";  // Append ? only if not present
     };
 
-
     // This is platform-specific. Adjust based on your OS.
     #ifdef _WIN32
         ShellExecuteA(0, 0, url.c_str(), 0, 0, SW_SHOW);
@@ -82,7 +81,7 @@ void ClientSocket::SelectFile(){
 
 bool ClientSocket::UploadFileToServer(const std::string& filepath){
 
-    std::string url = "https://" + connectedAddress + ":443";
+    std::string url = "https://" + connectedAddress + ":" + fileUploadPort;
 
     std::cout << url << "\n";
 
@@ -205,7 +204,9 @@ void ClientSocket::OnOpen(websocketpp::connection_hdl hdl) {
 }
 
 /// ClientSocket functions
-void ClientSocket::Start(std::string address, std::string port) {
+void ClientSocket::Start(std::string address, std::string port, std::string fileUploadPort) {
+
+    fileUploadPort = fileUploadPort;
 
     std::string finalAddress = address + ":" + port;
     connectedAddress = address;
