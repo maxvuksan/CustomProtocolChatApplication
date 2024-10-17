@@ -133,11 +133,13 @@ private:
                     }
 
                     if (mode == "download") {
+                       
                         int startPos = request.find("GET /download/");
                         startPos += 14;
                         int endPos = request.find("?", startPos);
 
                         string fileName = request.substr(startPos, endPos - startPos);
+                         cout << "This is a test\n\n\n" << fileName << endl;
 
                         fs::path path = "uploads"; 
 
@@ -151,9 +153,6 @@ private:
                         } catch (const exception & e) {
                             cerr << "Download Error: Cannot resolve canonical path" << endl; 
                         }
-                        
-
-
 
                         std::ifstream file(path / fileName, std::ios::binary);
 
@@ -365,7 +364,7 @@ private:
 
 class Https {
     public:
-        Https(string, int);
+        Https(string);
         void StartServer();
 
     private:

@@ -24,11 +24,6 @@ int Server::StartServer() {
     cout << "Enter main server port " << endl;
     cin >> port;
 
-    int filePort;
-    cout << "Enter file serve port " << endl;
-    cin >> filePort;
-
-
     address += ":" + to_string(port);
 
     GetRSAKeys(ip, port);
@@ -37,7 +32,7 @@ int Server::StartServer() {
     
     hostThread = thread(&ServerHost::StartServer, &serverHost, port, socketList, address, publicKey);
 
-    httpsServer = new Https(ip, filePort);
+    httpsServer = new Https(ip);
     httpsThread = thread(&Https::StartServer, httpsServer);
 
 

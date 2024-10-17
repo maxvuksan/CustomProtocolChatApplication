@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Https::Https(string serverIp, int port) {
+Https::Https(string serverIp) {
     
     ssl_context = new asio::ssl::context(asio::ssl::context::sslv23);
     ssl_context->use_certificate_chain_file("-server.crt");
@@ -10,7 +10,7 @@ Https::Https(string serverIp, int port) {
 
     ip = serverIp;
 
-    httpsServer = new HttpsServer(io_context, port, *ssl_context, ip);
+    httpsServer = new HttpsServer(io_context, 443, *ssl_context, ip);
 
     
 }
