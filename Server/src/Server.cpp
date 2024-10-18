@@ -21,7 +21,7 @@ int Server::StartServer() {
     }
 
     int port;
-    cout << "Enter main server port " << endl;
+    cout << "Enter server port " << endl;
     cin >> port;
 
     address += ":" + to_string(port);
