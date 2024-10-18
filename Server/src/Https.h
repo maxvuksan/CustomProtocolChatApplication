@@ -143,15 +143,18 @@ private:
 
                         fs::path path = "uploads"; 
 
+                         fs::path canonicalPath;
                         try {
-                            fs::path canonicalPath = fs::canonical(path / fileName);
+                            canonicalPath = fs::canonical(path / fileName);
 
-                            if (canonicalPath.string().find(fs::canonical(path).string()) != 0) {
-                                std::cerr << "Attempt to access a file outside of the uploads directory: " << fileName << std::endl;
-                                return;
-                            }
+                            
                         } catch (const exception & e) {
                             cerr << "Download Error: Cannot resolve canonical path" << endl; 
+                        }
+
+                        if (canonicalPath.string().find(fs::canonical(path).string()) != 0) {
+                            std::cerr << "Attempt to access a file outside of the uploads directory: " << fileName << std::endl;
+                            return;
                         }
 
                         std::ifstream file(path / fileName, std::ios::binary);
