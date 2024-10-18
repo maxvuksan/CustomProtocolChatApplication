@@ -37,14 +37,11 @@ std::string getContentsAfterSemicolon(const std::string& input) {
 
 void ClientSocket::OpenLinkInBrowser(std::string url){
 
-    std::string command = "start " + getContentsAfterSemicolon(url);
     // append ? at end of URL
     // Check if the URL already has a question mark
     if (url.find('?') == std::string::npos) {
         url += "?";  // Append ? only if not present
     };
-
-    system(command.c_str());
 
 
     // This is platform-specific. Adjust based on your OS.
