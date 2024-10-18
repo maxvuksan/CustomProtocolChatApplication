@@ -1,4 +1,4 @@
-# Chat Application (VULNERABLE)
+# Chat Application
 
 *A non-persistant chat application utalizing a custom student created protocol.*
 
